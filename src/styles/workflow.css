@@ -245,3 +245,9 @@
 @media (forced-colors: active) {
   .node::before, .legend__sw, .slot.is-proctored::before, .addpop__bar { forced-color-adjust: none; --ink: CanvasText; --bg: Canvas; --bg-subtle: Canvas; }
 }
+
+/* While a step's options menu is open, hide the + below it so the menu reads cleanly over the spine. */
+.step:has(> .node .node__menu .menu__button[aria-expanded="true"]) > .slot .slot__add { visibility: hidden; }
+.step:has(> .node .node__menu .menu__button[aria-expanded="true"]) { z-index: 5; }
+.step { z-index: auto; }
+.node__menu .menu__list { z-index: 50; }
