@@ -6,6 +6,9 @@ import { appById } from '../../data/apps';
 import { PEOPLE, person, setMe, useMe } from '../../data/content/people';
 import Menu from '../../components/content/Menu';
 import { resetContent } from '../../data/content/store';
+import { SEED_ASSETS } from '../../data/content/seedAssets';
+import { SEED_MODULES } from '../../data/content/seedModules';
+import { SEED_WORKFLOWS } from '../../data/content/seedWorkflows';
 import AssetsPage from './AssetsPage';
 import ModulesPage from './ModulesPage';
 import ModulePage from './ModulePage';
@@ -18,6 +21,22 @@ import '../../styles/scores.css';
 import '../../styles/misbehavior.css';
 import '../../styles/testplan.css';
 
+
+/**
+ * Where to land after a reset: the same page, unless it shows something the
+ * reset removes (an upload, a new module or workflow), then that page's list.
+ */
+function afterReset(path: string) {
+  const rest = path.replace(BASE, '');
+  const [, section, id] = rest.split('/');
+  const exists =
+    section === 'assets' ? SEED_ASSETS.some((x) => x.id === id)
+    : section === 'modules' ? SEED_MODULES.some((x) => x.id === id)
+    : section === 'workflows' ? SEED_WORKFLOWS.some((x) => x.id === id)
+    : false;
+  if (!id || exists) return path;
+  return section === 'modules' ? contentRoutes.modules() : section === 'workflows' ? contentRoutes.workflows() : contentRoutes.assets();
+}
 
 /** Assessment content: one app in its own frame, sectioned by horizontal tabs. */
 export default function ContentApp() {
@@ -41,7 +60,7 @@ export default function ContentApp() {
               what="content"
               description="Puts back the sample assets, modules and OA workflows (with their scores, test plans and comments), and deletes files uploaded in this browser."
               done="Content reset."
-              to={contentRoutes.assets()}
+              to={afterReset(pathname)}
               onReset={resetContent}
             />
             <Menu label={`Signed in as ${me.name}, ${me.role}. Switch person`} className="menu--avatar" items={
