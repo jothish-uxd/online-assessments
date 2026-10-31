@@ -19,6 +19,7 @@ export const PlusIcon = () => <Svg><path d="M12 5v14M5 12h14" /></Svg>;
 export const UpIcon = () => <Svg><path d="m6 14 6-6 6 6" /></Svg>;
 export const DownIcon = () => <Svg><path d="m6 10 6 6 6-6" /></Svg>;
 export const CopyIcon = () => <Svg><rect x="8.5" y="8.5" width="11" height="11" rx="1.5" /><path d="M15.5 8.5v-3a1 1 0 0 0-1-1h-9a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h3" /></Svg>;
+export const LockIcon = () => <Svg><rect x="5" y="10.5" width="14" height="10" rx="2" /><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" /></Svg>;
 export const AlertIcon = () => <Svg><path d="M12 4 2.5 20h19z" /><path d="M12 10v4.5M12 17.2v.01" /></Svg>;
 export const CheckIcon = () => <Svg><path d="m5 12.5 4.5 4.5L19 7.5" /></Svg>;
 export const LinkIcon = () => <Svg><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1" /><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" /></Svg>;

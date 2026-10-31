@@ -12,6 +12,7 @@ import ScratchEditor from './ScratchEditor';
 import REditor from './REditor';
 import RView from './RView';
 import Pager, { usePage } from './Pager';
+import { CommentButton } from '../comments/Comments';
 
 export type Pane =
   | { k: 'empty' }
@@ -99,7 +100,7 @@ export default function CompositeScores({ w, editable }: { w: Workflow; editable
                 const i = scores.indexOf(s);
                 const current = openScore?.id === s.id;
                 return (
-                  <li key={s.id} className={`score-row${current ? ' is-current' : ''}`}>
+                  <li key={s.id} id={`score-${s.id}`} className={`score-row${current ? ' is-current' : ''}`}>
                     {editable && (
                       <span className="score-row__move">
                         <button type="button" className="bframe__btn" aria-label={`Move ${label(s)} up`} disabled={i === 0}
@@ -125,6 +126,7 @@ export default function CompositeScores({ w, editable }: { w: Workflow; editable
                       </span>
                       <svg className="score-row__chev" viewBox="0 0 16 16" aria-hidden="true"><path d="m6 3 5 5-5 5" /></svg>
                     </button>
+                    <CommentButton className="score-row__c" target={{ kind: 'score', id: s.id, label: s.kind === 'r' ? `${s.name} (${s.outputs.length} outputs)` : s.name, tab: 'scores' }} />
                   </li>
                 );
               })}

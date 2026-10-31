@@ -3,7 +3,8 @@ import { Navigate, NavLink, Route, Routes } from 'react-router-dom';
 import BrowserFrame, { useFrameHistory } from '../../components/BrowserFrame';
 import ResetButton from '../../components/ResetButton';
 import { appById } from '../../data/apps';
-import { ME, person } from '../../data/content/people';
+import { PEOPLE, person, setMe, useMe } from '../../data/content/people';
+import Menu from '../../components/content/Menu';
 import { resetContent } from '../../data/content/store';
 import AssetsPage from './AssetsPage';
 import ModulesPage from './ModulesPage';
@@ -26,7 +27,7 @@ export default function ContentApp() {
   // Scroll to the top when the page changes, but not when an asset opens beside the library.
   const page = pathname.replace(/\/assets\/.+$/, '/assets');
   useEffect(() => { mainRef.current?.scrollTo({ top: 0 }); }, [page]);
-  const me = person(ME);
+  const me = person(useMe());
 
   return (
     <BrowserFrame.Stage>
@@ -43,10 +44,11 @@ export default function ContentApp() {
               to={contentRoutes.assets()}
               onReset={resetContent}
             />
-            <span title={`${me.name}, ${me.role}`}>
+            <Menu label={`Signed in as ${me.name}, ${me.role}. Switch person`} className="menu--avatar" items={
+              Object.values(PEOPLE).filter((p) => p.id !== me.id).map((p) => ({ label: `Switch to ${p.name} · ${p.role}`, onSelect: () => setMe(p.id) }))
+            }>
               <span className="avatar avatar--sm" aria-hidden="true">{me.initials}</span>
-              <span className="visually-hidden">Signed in as {me.name}, {me.role}</span>
-            </span>
+            </Menu>
           </>
         }
       >

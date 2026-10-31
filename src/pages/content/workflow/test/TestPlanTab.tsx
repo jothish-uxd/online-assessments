@@ -1,6 +1,6 @@
 import { useEffect, useId, useState } from 'react';
 import Dialog from '../../../../components/content/Dialog';
-import { AlertIcon, CheckIcon, CloseIcon, DownloadIcon, PlusIcon, TrashIcon } from '../../../../components/content/icons';
+import { AlertIcon, CheckIcon, CloseIcon, DownloadIcon, LockIcon, PlusIcon, TrashIcon } from '../../../../components/content/icons';
 import { useModules, now } from '../../../../data/content/store';
 import { person } from '../../../../data/content/people';
 import { when } from '../../../../data/content/format';
@@ -12,6 +12,8 @@ import type { TestCase, TestSuite, Workflow } from '../../../../data/content/typ
 import CaseCard from './CaseCard';
 import CaseDialog from './CaseDialog';
 import { RollupBadge } from './badges';
+import { CommentButton } from '../comments/Comments';
+import { STAGES, stageIndex } from '../../../../data/content/workflows';
 
 /** Test plan: scenarios that prove the online assessment behaves before it goes live. */
 export default function TestPlanTab({ w }: { w: Workflow }) {
@@ -31,6 +33,9 @@ export default function TestPlanTab({ w }: { w: Workflow }) {
   }, [plan, suiteId]);
 
   const say = (t: string) => setToast(t);
+  const si = stageIndex(w.stage);
+  const testing = w.stage === 'e2e';
+  const readOnly = !testing;
 
   if (!plan) {
     return (
@@ -41,13 +46,20 @@ export default function TestPlanTab({ w }: { w: Workflow }) {
             <svg viewBox="0 0 24 24"><path d="M9 4h6M10 4v5l-5 9a1.5 1.5 0 0 0 1.3 2.2h11.4A1.5 1.5 0 0 0 19 18l-5-9V4" /><path d="M7.5 14h9" /></svg>
           </span>
           <h3 className="sub-title">There is no test plan for this workflow</h3>
-          <p className="muted">A test plan proves the online assessment behaves before it goes live: the right modules appear, scores land in the right band, and misbehavior is caught. We’ll start you with suites suggested from this workflow’s scoring, misbehavior settings, variations and equivalent workflows.</p>
+          <p className="muted">A test plan proves the online assessment behaves before it goes live: the right modules appear, scores land in the right band, and misbehavior is caught.</p>
+          {si < stageIndex('e2e') ? (
+            <p className="tp-gate"><LockIcon /> Test plans start in End-to-end testing, once Program review approves the workflow. It’s in <b>{STAGES[si].label}</b> now.</p>
+          ) : !testing ? (
+            <p className="tp-gate">This workflow passed End-to-end testing without a test plan in this prototype.</p>
+          ) : (<>
+          <p className="muted">We’ll start you with suites suggested from this workflow’s scoring, misbehavior settings, variations and equivalent workflows.</p>
           <button type="button" className="btn btn--primary" onClick={() => {
             const p = suggestPlan(w, modules, workflows);
             createTestPlan(w.id, p);
             setSuiteId(p.suites[0]?.id ?? null);
             say('Test plan created.');
           }}>Create test plan</button>
+          </>)}
         </div>
       </section>
     );
@@ -77,6 +89,12 @@ export default function TestPlanTab({ w }: { w: Workflow }) {
           <CheckIcon /> <span>{toast}</span>
           <button type="button" className="bframe__btn" aria-label="Dismiss" onClick={() => setToast('')}><CloseIcon /></button>
         </div>
+      )}
+
+      {readOnly && (
+        <p className="readonly-note tp-readonly"><LockIcon /> {si < stageIndex('e2e')
+          ? <span>Unlocked for edits, so testing is paused. Results so far are kept; the plan opens again once Program review approves the changes.</span>
+          : <span>Testing finished in End-to-end testing. The plan and its results are kept as a record.</span>}</p>
       )}
 
       <div className="tp-card">
@@ -117,7 +135,7 @@ export default function TestPlanTab({ w }: { w: Workflow }) {
 
       <div className="section-head tp-suites-head">
         <h3 className="section-title">Test suites ({plan.suites.length})</h3>
-        <button type="button" className="btn btn--secondary btn--sm" onClick={() => setNewSuite(true)}><PlusIcon /> Create new test suite</button>
+        {!readOnly && <button type="button" className="btn btn--secondary btn--sm" onClick={() => setNewSuite(true)}><PlusIcon /> Create new test suite</button>}
       </div>
 
       <div className="scores tp">
@@ -142,40 +160,43 @@ export default function TestPlanTab({ w }: { w: Workflow }) {
 
         <div className="scores__pane">
           {current ? (
-            <div className="tp-suite">
+            <div className="tp-suite" id={`suite-${current.id}`}>
               <div className="tp-suite__head">
                 <div>
                   <h3 className="score-form__title">Test suite {currentN}</h3>
                   <p className="tp-suite__reason">{current.reason}</p>
                   <p className="muted small">{current.description}</p>
                 </div>
-                <button type="button" className="bframe__btn tp-danger" aria-label={`Delete test suite ${currentN}`} onClick={() => setDeleting(current)}><TrashIcon /></button>
+                <span className="tp-suite__tools">
+                  <CommentButton target={{ kind: 'suite', id: current.id, label: `Test suite ${currentN}: ${current.reason}`, tab: 'test-plan' }} />
+                  {!readOnly && <button type="button" className="bframe__btn tp-danger" aria-label={`Delete test suite ${currentN}`} onClick={() => setDeleting(current)}><TrashIcon /></button>}
+                </span>
               </div>
 
               <div className="section-head tp-cases-head">
                 <h4 className="sub-title">Test cases</h4>
-                <button type="button" className="btn btn--secondary btn--sm" onClick={() => setAdding(true)}><PlusIcon /> Add new case</button>
+                {!readOnly && <button type="button" className="btn btn--secondary btn--sm" onClick={() => setAdding(true)}><PlusIcon /> Add new case</button>}
               </div>
 
               {current.cases.length ? (
                 <ol className="tp-cases">
                   {current.cases.map((tc: TestCase, i) => (
                     <li key={tc.id}>
-                      <CaseCard w={w} suite={current} suiteN={currentN} tc={tc} n={i + 1} onToast={say} />
+                      <CaseCard w={w} suite={current} suiteN={currentN} tc={tc} n={i + 1} onToast={say} readOnly={readOnly} />
                     </li>
                   ))}
                 </ol>
               ) : (
                 <div className="tp-empty tp-empty--small">
                   <h5 className="sub-title">There are no cases for this test suite</h5>
-                  <button type="button" className="btn btn--secondary btn--sm" onClick={() => setAdding(true)}>Create a case</button>
+                  {!readOnly && <button type="button" className="btn btn--secondary btn--sm" onClick={() => setAdding(true)}>Create a case</button>}
                 </div>
               )}
             </div>
           ) : (
             <div className="tp-empty tp-empty--small">
               <h4 className="sub-title">No test suites yet</h4>
-              <button type="button" className="btn btn--secondary btn--sm" onClick={() => setNewSuite(true)}>Create new test suite</button>
+              {!readOnly && <button type="button" className="btn btn--secondary btn--sm" onClick={() => setNewSuite(true)}>Create new test suite</button>}
             </div>
           )}
         </div>

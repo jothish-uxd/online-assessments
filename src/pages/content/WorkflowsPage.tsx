@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { usePageTitle } from '../../components/usePageTitle';
 import Dialog from '../../components/content/Dialog';
 import { Byline } from '../../components/content/Byline';
-import { AlertIcon, CheckIcon, PlusIcon, SearchIcon } from '../../components/content/icons';
+import { AlertIcon, CheckIcon, LockIcon, PlusIcon, SearchIcon } from '../../components/content/icons';
 import { useModules } from '../../data/content/store';
 import { STAGES, createWorkflow, stageIndex, useWorkflows, validate } from '../../data/content/workflows';
 import { contentRoutes } from './routes';
@@ -64,6 +64,7 @@ export default function WorkflowsPage() {
               <th scope="col" className="num">Version</th>
               <th scope="col" className="num">Modules</th>
               <th scope="col">Validation</th>
+              <th scope="col" className="num">Open comments</th>
               <th scope="col">Created</th>
               <th scope="col">Last edited</th>
             </tr>
@@ -76,13 +77,15 @@ export default function WorkflowsPage() {
                 <tr key={w.id}>
                   <th scope="row">
                     <Link to={contentRoutes.workflow(w.id)} className="row-link">{w.name}</Link>
+                    {w.stage !== 'build' && <span className="wf-lock wf-lock--sm" title="Locked"><LockIcon /><span className="visually-hidden">, locked</span></span>}
                     <span className="cell-sub mono">{w.code}</span>
                   </th>
                   <td>
                     <span className="mini-stages" aria-hidden="true">
                       {STAGES.map((s, i) => <span key={s.id} className={i < si ? 'is-done' : i === si ? 'is-current' : ''} />)}
                     </span>
-                    <span className="cell-strong">{STAGES[si].label}</span>
+                    <span className="cell-strong">{w.stage === 'program-review' ? 'In Program review' : STAGES[si].label}</span>
+                    {w.stage === 'build' && w.reviews[w.reviews.length - 1]?.decision?.outcome === 'changes' && <span className="cell-sub">Changes requested</span>}
                     <span className="visually-hidden">, stage {si + 1} of {STAGES.length}</span>
                   </td>
                   <td className="num">v{w.version}{w.dirty && <span className="cell-sub">Unsaved</span>}</td>
@@ -92,6 +95,7 @@ export default function WorkflowsPage() {
                       ? <span className="gap-text small"><AlertIcon /> {issues.length} issue{issues.length === 1 ? '' : 's'}</span>
                       : <span className="ready small"><CheckIcon /> Validated</span>}
                   </td>
+                  <td className="num">{w.comments.filter((t) => !t.resolved).length || <span className="muted">—</span>}</td>
                   <td><Byline stamp={w.created} stacked /></td>
                   <td><Byline stamp={w.edited} stacked /></td>
                 </tr>

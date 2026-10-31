@@ -1,12 +1,12 @@
 import { peek, put, useStored } from '../store';
 import { now } from './store';
 import { SEED_WORKFLOWS } from './seedWorkflows';
-import type { Activity, Misbehavior, Module, TestCase, TestPlan, TestSuite, Score, Stage, Step, Variation, Workflow, WorkflowSettings } from './types';
+import type { Activity, CommentTarget, Misbehavior, Module, PersonId, Thread, TestCase, TestPlan, TestSuite, Score, Stage, Step, Variation, Workflow, WorkflowSettings } from './types';
 import { checkR, checkScratch, inputsFor, outputsOf } from './scoring';
 import { NO_VIDEO_DEVICES, defaultMisbehavior } from './misbehavior';
 
 // v5: workflows gained composite scores, misbehavior settings and test plans.
-const KEY = 'content:v5:workflows';
+const KEY = 'content:v6:workflows'; // v6: review rounds and comments
 const all = () => peek<Workflow[]>(KEY) ?? SEED_WORKFLOWS;
 export const useWorkflows = () => useStored<Workflow[]>(KEY, () => SEED_WORKFLOWS)[0];
 
@@ -54,6 +54,8 @@ export function createWorkflow(name: string): Workflow {
     scoring: { variations: [], scores: [] },
     misbehavior: defaultMisbehavior(),
     testPlan: null,
+    reviews: [],
+    comments: [],
     settings: { ...SEED_WORKFLOWS[0].settings, ats: [], devices: ['desktop'], equivalent: [],
       reviewers: { ops: [], program: [], e2e: null, signoff: [], launch: null } },
     created: stamp, edited: stamp, history: [{ ...stamp, action: 'Created the workflow' }],
@@ -307,4 +309,77 @@ export function validate(w: Workflow, modules: Module[]): Issue[] {
   if (!w.settings.ats.length) out.push({ text: 'Choose at least one supported ATS.' });
   if (!w.settings.devices.length) out.push({ text: 'Choose at least one supported device.' });
   return out;
+}
+
+/* ---------- Program review ---------- */
+
+/** The open review round, if the workflow is waiting on one. */
+export const openRound = (w: Workflow) => {
+  const r = w.reviews[w.reviews.length - 1];
+  return w.stage === 'program-review' && r && !r.decision && !r.withdrawn ? r : undefined;
+};
+/** The last finished round, e.g. to show that changes were requested. */
+export const lastDecision = (w: Workflow) => [...w.reviews].reverse().find((r) => r.decision)?.decision;
+
+const thread = (target: CommentTarget, body: string): Thread => {
+  const n = now();
+  return { id: uid('th'), target, comments: [{ id: uid('c'), by: n.by, at: n.at, body }] };
+};
+const WHOLE: CommentTarget = { kind: 'workflow', label: 'Whole workflow', tab: 'builder' };
+
+export function requestReview(id: string, reviewers: PersonId[], message: string) {
+  patch(id, (w) => ({
+    ...w,
+    stage: 'program-review',
+    reviews: [...w.reviews, { n: w.reviews.length + 1, requested: now(), reviewers, message: message.trim() }],
+    comments: message.trim() ? [thread(WHOLE, message.trim()), ...w.comments] : w.comments,
+  }), `Requested Program review from ${reviewers.length} reviewer${reviewers.length === 1 ? '' : 's'}`, false);
+}
+
+export function withdrawReview(id: string) {
+  patch(id, (w) => ({
+    ...w, stage: 'build',
+    reviews: w.reviews.map((r, i) => (i === w.reviews.length - 1 ? { ...r, withdrawn: now() } : r)),
+  }), 'Withdrew the review request', false);
+}
+
+/** Approve (locks the workflow and moves it to End-to-end testing) or request changes (back to Build). */
+export function decideReview(id: string, outcome: 'approved' | 'changes', note: string) {
+  patch(id, (w) => ({
+    ...w,
+    stage: outcome === 'approved' ? 'e2e' : 'build',
+    reviews: w.reviews.map((r, i) => (i === w.reviews.length - 1 ? { ...r, decision: { ...now(), outcome, note: note.trim() } } : r)),
+    comments: note.trim()
+      ? [thread({ ...WHOLE, label: outcome === 'approved' ? 'Review: approved' : 'Review: changes requested' }, note.trim()), ...w.comments]
+      : w.comments,
+  }), outcome === 'approved' ? 'Approved in Program review; locked for testing' : 'Requested changes in Program review', false);
+}
+
+/** Unlock an approved workflow for edits. It goes back to Build and needs Program review again. */
+export function unlockWorkflow(id: string) {
+  patch(id, (w) => ({ ...w, stage: 'build' }), 'Unlocked for edits; needs Program review again', false);
+}
+
+/* ---------- Comments: never mark the workflow unsaved ---------- */
+
+export function addThread(id: string, target: CommentTarget, body: string) {
+  patch(id, (w) => ({ ...w, comments: [thread(target, body), ...w.comments] }), undefined, false);
+}
+export function replyThread(id: string, threadId: string, body: string) {
+  const n = now();
+  patch(id, (w) => ({
+    ...w,
+    comments: w.comments.map((t) => (t.id === threadId ? { ...t, resolved: undefined, comments: [...t.comments, { id: uid('c'), by: n.by, at: n.at, body }] } : t)),
+  }), undefined, false);
+}
+export function resolveThread(id: string, threadId: string, resolved: boolean) {
+  patch(id, (w) => ({ ...w, comments: w.comments.map((t) => (t.id === threadId ? { ...t, resolved: resolved ? now() : undefined } : t)) }), undefined, false);
+}
+export function deleteComment(id: string, threadId: string, commentId: string) {
+  patch(id, (w) => ({
+    ...w,
+    comments: w.comments
+      .map((t) => (t.id === threadId ? { ...t, comments: t.comments.filter((c) => c.id !== commentId) } : t))
+      .filter((t) => t.comments.length),
+  }), undefined, false);
 }

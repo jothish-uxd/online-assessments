@@ -64,3 +64,5 @@
   .setting__head { flex-direction: column; }
 }
 .detections .table-wrap { overflow: visible; }
+.setting__text { flex: 1; }
+.setting__head { align-items: center; gap: 12px; }

@@ -138,3 +138,6 @@ h5, h6 { margin: 0; }
   .tcase__actions { margin-left: 0; width: 100%; }
   .tcase__meta-wide { grid-column: auto; }
 }
+.tp-gate { display: flex; gap: 8px; align-items: flex-start; max-width: 62ch; padding: 12px 14px; border: 1px dashed var(--ink-faint); border-radius: 8px; text-align: left; font-size: 14px; }
+.tp-gate .icon { width: 16px; height: 16px; flex: none; margin-top: 2px; }
+.tp-readonly { margin: 0; max-width: none; display: flex; gap: 8px; }

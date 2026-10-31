@@ -141,6 +141,8 @@ export interface Workflow {
   scoring: Scoring;
   misbehavior: Misbehavior;
   testPlan: TestPlan | null;
+  reviews: ReviewRound[];
+  comments: Thread[];
   created: Stamp;
   edited: Stamp;
   history: Activity[];
@@ -240,3 +242,21 @@ export interface TestCase {
 export interface TestSuite { id: string; reason: string; description: string; cases: TestCase[]; created: Stamp }
 
 export interface TestPlan { name: string; description: string; created: Stamp; modified?: Stamp; suites: TestSuite[] }
+
+/* ---------- Review and comments ---------- */
+
+export interface ReviewRound {
+  n: number;
+  requested: Stamp;
+  reviewers: PersonId[];
+  message: string;
+  decision?: Stamp & { outcome: 'approved' | 'changes'; note: string };
+  withdrawn?: Stamp;
+}
+
+export type CommentTab = 'builder' | 'scores' | 'misbehavior' | 'test-plan' | 'history';
+export type TargetKind = 'workflow' | 'step' | 'score' | 'setting' | 'suite' | 'case';
+/** What a comment thread is about. The label is kept so threads still read well if the thing is deleted. */
+export interface CommentTarget { kind: TargetKind; id?: string; label: string; tab: CommentTab }
+export interface Comment { id: string; by: PersonId; at: string; body: string }
+export interface Thread { id: string; target: CommentTarget; comments: Comment[]; resolved?: Stamp }

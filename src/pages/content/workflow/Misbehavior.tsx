@@ -13,6 +13,7 @@ import {
 import type { Detection, Misbehavior as MB, Workflow } from '../../../data/content/types';
 import { contentRoutes } from '../routes';
 import { IdIcon, ProctorIcon } from './icons';
+import { CommentButton, settingTarget } from './comments/Comments';
 
 /**
  * Misbehavior settings: who the candidate is, what the camera and browser watch,
@@ -55,14 +56,13 @@ export default function Misbehavior({ w, editable }: { w: Workflow; editable: bo
       </div>
 
       <div className="mis">
-        <fieldset className="mis__main plain-fieldset" disabled={!editable}>
-          <legend className="visually-hidden">Misbehavior settings</legend>
+        <div className="mis__main plain-fieldset">
 
           {/* ---------- Identity ---------- */}
           <h3 className="mis__group">Identity</h3>
 
           <Setting
-            title="Selfie capture" on={mb.selfie.on} onToggle={(v) => turn('selfie', v)}
+            title="Selfie capture" ckey="selfie" editable={editable} on={mb.selfie.on} onToggle={(v) => turn('selfie', v)}
             locked={selfieNeededBy.length > 0 && mb.selfie.on ? `Needed by ${list(selfieNeededBy)}.` : undefined}
             summary="One photo of the candidate at the start, right after consent."
             body={<>
@@ -81,7 +81,7 @@ export default function Misbehavior({ w, editable }: { w: Workflow; editable: bo
           </Setting>
 
           <Setting
-            title="ID validation and verification" icon={<IdIcon />} on={idOn} onToggle={(v) => turn('id', v)}
+            title="ID validation and verification" ckey="id" editable={editable} icon={<IdIcon />} on={idOn} onToggle={(v) => turn('id', v)}
             summary="The candidate holds a photo ID up to the camera before the first scored module."
             body={<>
               <p><b>Validation</b> checks the document looks genuine and is in date. <b>Verification</b> checks its photo matches the candidate’s selfie, so selfie capture turns on with it.</p>
@@ -112,7 +112,7 @@ export default function Misbehavior({ w, editable }: { w: Workflow; editable: bo
           <h3 className="mis__group">Proctoring</h3>
 
           <Setting
-            title="Image proctoring" icon={<ProctorIcon />} on={mb.image.on} onToggle={(v) => turn('image', v)}
+            title="Image proctoring" ckey="image" editable={editable} icon={<ProctorIcon />} on={mb.image.on} onToggle={(v) => turn('image', v)}
             summary="The camera takes photos at random moments during scored modules."
             body={<>
               <p>Candidates know the camera is on, but not when a photo is taken. Each photo is compared with the starting selfie. It’s lighter than video: it works on phones and tablets, uses little data, and reviewers look through a strip of photos instead of a recording.</p>
@@ -129,7 +129,7 @@ export default function Misbehavior({ w, editable }: { w: Workflow; editable: bo
           </Setting>
 
           <Setting
-            title="Video proctoring" icon={<ProctorIcon />} on={mb.video.on} onToggle={(v) => turn('video', v)}
+            title="Video proctoring" ckey="video" editable={editable} icon={<ProctorIcon />} on={mb.video.on} onToggle={(v) => turn('video', v)}
             summary="The camera records from the proctoring check to the end of the assessment."
             body={<>
               <p>Detected events are marked on a timeline, so reviewers in the Proctoring report jump straight to them instead of watching the whole recording. Recording the microphone too lets it catch talking.</p>
@@ -156,6 +156,7 @@ export default function Misbehavior({ w, editable }: { w: Workflow; editable: bo
             </div>
           )}
 
+          <fieldset disabled={!editable} className="plain-fieldset"><legend className="visually-hidden">Camera detections</legend>
           <Detections
             title="What the camera watches for" rows={CAMERA_DETECTIONS} values={mb.camera}
             available={(x) => x.needs === 'video' ? (mb.video.on ? null : 'Needs video proctoring')
@@ -163,20 +164,23 @@ export default function Misbehavior({ w, editable }: { w: Workflow; editable: bo
             extra={(x) => (x.id === 'talking' || x.id === 'speaking') && mb.video.on && !mb.video.audio ? 'Needs the microphone' : null}
             onChange={(k, v) => upd((m) => ({ ...m, camera: { ...m.camera, [k]: v } }), 'Changed camera detections')}
           />
+          </fieldset>
 
           {/* ---------- Browser ---------- */}
-          <h3 className="mis__group">Browser activity</h3>
+          <h3 className="mis__group" id="setting-browser">Browser activity <CommentButton target={settingTarget('browser')} /></h3>
           <p className="muted small mis__groupnote">Watches the assessment tab itself. Works on every device and needs no camera, so it’s the lightest check to leave on.</p>
+          <fieldset disabled={!editable} className="plain-fieldset"><legend className="visually-hidden">Browser detections</legend>
           <Detections
             title="What the browser watches for" rows={BROWSER_DETECTIONS} values={mb.browser}
             available={(x) => (!x.mobile && !w.settings.devices.some((d) => d === 'desktop')) ? 'Desktop and laptop only' : null}
             extra={(x) => (!x.mobile && w.settings.devices.some((d) => d !== 'desktop')) ? 'Desktop and laptop only' : null}
             onChange={(k, v) => upd((m) => ({ ...m, browser: { ...m.browser, [k]: v } }), 'Changed browser detections')}
           />
+          </fieldset>
 
           {/* ---------- Review ---------- */}
-          <h3 className="mis__group">Review</h3>
-          <div className="mis__review">
+          <h3 className="mis__group" id="setting-review">Review <CommentButton target={settingTarget('review')} /></h3>
+          <fieldset disabled={!editable} className="mis__review"><legend className="visually-hidden">Review</legend>
             <NumField label="Send to proctoring review at (flags)" value={mb.review.threshold} min={1}
               help="Sessions with fewer flags are scored straight away. A different-person flag always goes to review."
               onChange={(v) => upd((m) => ({ ...m, review: { ...m.review, threshold: v } }), 'Changed the review threshold')} />
@@ -188,8 +192,8 @@ export default function Misbehavior({ w, editable }: { w: Workflow; editable: bo
                 help="Kept longer only when a review is open or a candidate disputes a result."
                 onChange={(v) => upd((m) => ({ ...m, video: { ...m.video, retentionDays: v } }), 'Changed recording retention')} />
             )}
-          </div>
-        </fieldset>
+          </fieldset>
+        </div>
 
         <Summary w={w} idOn={idOn} />
       </div>
@@ -201,13 +205,13 @@ export default function Misbehavior({ w, editable }: { w: Workflow; editable: bo
 const orList = (xs: string[]) => xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} or ${xs[xs.length - 1]}`;
 const list = (xs: string[]) => xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`;
 
-function Setting({ title, icon, on, onToggle, locked, summary, body, children }: {
+function Setting({ title, icon, on, onToggle, locked, summary, body, children, ckey, editable }: {
   title: string; icon?: ReactNode; on: boolean; onToggle: (v: boolean) => void; locked?: string;
-  summary: string; body: ReactNode; children?: ReactNode;
+  summary: string; body: ReactNode; children?: ReactNode; ckey: string; editable: boolean;
 }) {
   const id = useId();
   return (
-    <section className={`setting${on ? ' is-on' : ''}`} aria-labelledby={`${id}-t`}>
+    <section id={`setting-${ckey}`} className={`setting${on ? ' is-on' : ''}`} aria-labelledby={`${id}-t`}>
       <div className="setting__head">
         <div className="setting__text">
           <h4 id={`${id}-t`} className="setting__title">{icon}{title}</h4>
@@ -215,14 +219,15 @@ function Setting({ title, icon, on, onToggle, locked, summary, body, children }:
         </div>
         <button type="button" role="switch" aria-checked={on} aria-labelledby={`${id}-t`}
           aria-describedby={`${id}-s${locked ? ` ${id}-l` : ''}`} aria-disabled={locked ? true : undefined}
-          className="switch" onClick={() => { if (!locked) onToggle(!on); }}>
+          className="switch" disabled={!editable} onClick={() => { if (!locked) onToggle(!on); }}>
           <span className="switch__track" aria-hidden="true"><span className="switch__thumb" /></span>
           <span className="switch__text" aria-hidden="true">{on ? 'On' : 'Off'}</span>
         </button>
+        <CommentButton target={settingTarget(ckey)} />
       </div>
       {locked && <p id={`${id}-l`} className="setting__locked">{locked} Turn those off first.</p>}
       <div className="setting__body">{body}</div>
-      {on && children && <div className="setting__options">{children}</div>}
+      {on && children && <fieldset disabled={!editable} className="setting__options plain-fieldset"><legend className="visually-hidden">{title} options</legend>{children}</fieldset>}
     </section>
   );
 }

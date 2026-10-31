@@ -10,6 +10,7 @@ import { OutcomeBadge, StatusBadge } from './badges';
 import CaseDialog from './CaseDialog';
 import ResultsDialog from './ResultsDialog';
 import RunDrawer from './RunDrawer';
+import { CommentButton } from '../comments/Comments';
 
 const EditIcon = () => (
   <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z" /><path d="m13.5 6.5 4 4" /></svg>
@@ -19,8 +20,8 @@ const Chevron = ({ open }: { open: boolean }) => (
 );
 
 /** One test case: its scenario and metadata, the test link, what to do and expect, and its results. */
-export default function CaseCard({ w, suite, suiteN, tc, n, onToast }: {
-  w: Workflow; suite: TestSuite; suiteN: number; tc: TestCase; n: number; onToast: (t: string) => void;
+export default function CaseCard({ w, suite, suiteN, tc, n, onToast, readOnly }: {
+  w: Workflow; suite: TestSuite; suiteN: number; tc: TestCase; n: number; onToast: (t: string) => void; readOnly: boolean;
 }) {
   const id = useId();
   const modules = useModules();
@@ -49,7 +50,7 @@ export default function CaseCard({ w, suite, suiteN, tc, n, onToast }: {
   };
 
   return (
-    <article className={`tcase${open ? ' is-open' : ''}`} aria-labelledby={`${id}-h`}>
+    <article id={`case-${tc.id}`} className={`tcase${open ? ' is-open' : ''}`} aria-labelledby={`${id}-h`}>
       <div className="tcase__head">
         <h5 className="tcase__label" id={`${id}-h`}>
           <button type="button" className="tcase__toggle" aria-expanded={open} aria-controls={`${id}-b`} onClick={() => setOpen(!open)}>
@@ -62,6 +63,8 @@ export default function CaseCard({ w, suite, suiteN, tc, n, onToast }: {
             aria-describedby={!locked ? `${id}-runwhy` : undefined}
             onClick={() => { if (locked) setRun(true); }}>View system behavior and score results</button>
           {!locked && <span id={`${id}-runwhy`} className="visually-hidden">Generate the test link first.</span>}
+          <CommentButton className="tcase__icon" target={{ kind: 'case', id: tc.id, label: `${label}: ${tc.title}`, tab: 'test-plan' }} />
+          {!readOnly && <>
           <button type="button" className="bframe__btn tcase__icon" aria-label={`Duplicate ${label}`} onClick={duplicate}><CopyIcon /></button>
           <span className="tcase__tipwrap">
             <button ref={editRef} type="button" className="bframe__btn tcase__icon" aria-label={`Edit ${label}`}
@@ -78,6 +81,7 @@ export default function CaseCard({ w, suite, suiteN, tc, n, onToast }: {
             )}
           </span>
           <button type="button" className="bframe__btn tcase__icon tp-danger" aria-label={`Delete ${label}`} onClick={() => setDeleting(true)}><TrashIcon /></button>
+          </>}
         </div>
       </div>
 
@@ -101,7 +105,7 @@ export default function CaseCard({ w, suite, suiteN, tc, n, onToast }: {
             {tc.link ? (
               <p><LinkIcon /> <span className="tcase__linklabel">Test link</span> <a href={tc.link} onClick={(e) => e.preventDefault()} className="mono">{tc.link}</a>
                 {tc.linkCreated && <span className="muted small"> · generated <time dateTime={tc.linkCreated.at}>{when(tc.linkCreated.at, true)}</time></span>}</p>
-            ) : (
+            ) : readOnly ? <p className="muted small">No test link was generated.</p> : (
               <>
                 <button type="button" className="btn btn--secondary btn--sm" onClick={generate}>Generate test link</button>
                 <span className="muted small">Opens version {w.version} as {candidateLabel(tc.candidateId).split(' (')[0]}. Editing locks once it exists.</span>
@@ -123,7 +127,7 @@ export default function CaseCard({ w, suite, suiteN, tc, n, onToast }: {
           <div className="tcase__results">
             <div className="tcase__results-head">
               <h6 className="tcase__h">Case results</h6>
-              <button type="button" className="bframe__btn tcase__icon" aria-label={`Edit results for ${label}`} onClick={() => setResults(true)}><EditIcon /></button>
+              {!readOnly && <button type="button" className="bframe__btn tcase__icon" aria-label={`Edit results for ${label}`} onClick={() => setResults(true)}><EditIcon /></button>}
             </div>
             <dl className="tcase__resmeta">
               <div><dt>Tester</dt><dd>{tc.result.tester || 'Unassigned'}</dd></div>

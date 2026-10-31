@@ -1,3 +1,4 @@
+import { peek, put, useStored } from '../store';
 import type { PersonId } from './types';
 
 /* Placeholder team, from the Star Wars galaxy. */
@@ -12,7 +13,14 @@ export const PEOPLE: Record<PersonId, Person> = {
   wedge:   { id: 'wedge',   name: 'Wedge Antilles', role: 'Content designer',    initials: 'WA' },
 };
 
-/** The person signed in to this prototype. Every change is stamped with them. */
-export const ME: PersonId = 'leia';
+/*
+  The person signed in to this prototype. Every change is stamped with them.
+  The prototype can switch people (from the avatar in the browser bar) so one
+  person can play both the author and the reviewer.
+*/
+const KEY = 'session:me';
+export let ME: PersonId = peek<PersonId>(KEY) ?? 'leia';
+export function setMe(id: PersonId) { ME = id; put(KEY, id); }
+export const useMe = () => useStored<PersonId>(KEY, () => 'leia')[0];
 
 export const person = (id: PersonId) => PEOPLE[id];
