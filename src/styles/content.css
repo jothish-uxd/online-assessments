@@ -73,7 +73,7 @@
 .ca-tab[aria-current="page"], .ca-tab.active { color: var(--ink); border-bottom-color: var(--ink); }
 .ca-tab:focus-visible { outline-offset: -5px; }
 .ca-main { flex: 1; min-height: 0; overflow-y: auto; position: relative; }
-.ca-page { padding: 32px clamp(16px, 3vw, 40px) 64px; max-width: 1360px; }
+.ca-page { padding: 32px clamp(16px, 3vw, 40px) 64px; }
 
 .ca-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px 24px; flex-wrap: wrap; margin-bottom: 24px; }
 .ca-title { font-size: clamp(24px, 2.4vw, 30px); line-height: 1.15; font-weight: 600; letter-spacing: -.035em; }
