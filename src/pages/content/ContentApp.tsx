@@ -8,7 +8,9 @@ import { resetContent } from '../../data/content/store';
 import AssetsPage from './AssetsPage';
 import ModulesPage from './ModulesPage';
 import ModulePage from './ModulePage';
-import AssessmentsPage from './AssessmentsPage';
+import WorkflowsPage from './WorkflowsPage';
+import WorkflowPage from './workflow/WorkflowPage';
+import '../../styles/workflow.css';
 import { BASE, contentRoutes } from './routes';
 import '../../styles/content.css';
 
@@ -51,7 +53,7 @@ export default function ContentApp() {
             <nav className="ca-tabs" aria-label="Assessment content">
               <NavLink to={contentRoutes.assets()} className="ca-tab">Assets</NavLink>
               <NavLink to={contentRoutes.modules()} className="ca-tab">Modules</NavLink>
-              <NavLink to={contentRoutes.assessments()} className="ca-tab">Assessments</NavLink>
+              <NavLink to={contentRoutes.workflows()} className="ca-tab">OA workflow</NavLink>
             </nav>
           </div>
           <main id="main" className="ca-main" ref={mainRef} data-scroll>
@@ -61,7 +63,10 @@ export default function ContentApp() {
               <Route path="assets/:assetId" element={<AssetsPage />} />
               <Route path="modules" element={<ModulesPage />} />
               <Route path="modules/:moduleId" element={<ModulePage />} />
-              <Route path="assessments" element={<AssessmentsPage />} />
+              <Route path="workflows" element={<WorkflowsPage />} />
+              <Route path="workflows/:workflowId" element={<WorkflowPage />} />
+              <Route path="workflows/:workflowId/:tab" element={<WorkflowPage />} />
+              <Route path="assessments" element={<Navigate to="../workflows" replace />} />
               <Route path="*" element={<Navigate to="assets" replace />} />
             </Routes>
           </main>

@@ -99,3 +99,46 @@ export interface Module {
   edited: Stamp;
   history: Activity[];
 }
+
+/* ---------- OA workflows ---------- */
+
+export type Stage = 'build' | 'program-review' | 'e2e' | 'signoff' | 'launch-ready' | 'live';
+
+/** One stop in a workflow: a module, or a checkpoint the candidate passes through. */
+export type Step =
+  | { id: string; kind: 'module'; moduleId: string }
+  | { id: string; kind: 'id-check' }
+  | { id: string; kind: 'proctoring' };
+
+/** Who reviews each stage. null means the stage needs no reviewers. */
+export type Reviewers = Record<'ops' | 'program' | 'e2e' | 'signoff' | 'launch', PersonId[] | null>;
+
+export interface WorkflowSettings {
+  linkDays: number;
+  scoreDays: number;
+  ats: string[];
+  devices: string[];
+  /** Other workflows whose scores count as equivalent */
+  equivalent: string[];
+  reviewers: Reviewers;
+  inviteSubject: string;
+  inviteBody: string;
+  reminderDays: number;
+}
+
+export interface Workflow {
+  id: string;
+  name: string;
+  /** Stable ID used by ATS integrations */
+  code: string;
+  type: 'Candidate';
+  stage: Stage;
+  version: number;
+  /** Changed since the last saved version */
+  dirty: boolean;
+  steps: Step[];
+  settings: WorkflowSettings;
+  created: Stamp;
+  edited: Stamp;
+  history: Activity[];
+}

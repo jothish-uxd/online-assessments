@@ -13,6 +13,7 @@ import { ITEM_TYPES, allowedIn, purposeLabel, typeInfo } from '../../data/conten
 import type { Item, ItemType, Module } from '../../data/content/types';
 import ItemEditor from './ItemEditor';
 import { KIND_TEXT, StatusBadge } from './moduleBits';
+import { useWorkflows, workflowsUsing } from '../../data/content/workflows';
 import { contentRoutes } from './routes';
 
 export default function ModulePage() {
@@ -39,6 +40,7 @@ function ModuleView({ m }: { m: Module }) {
   const navigate = useNavigate();
   const location = useLocation() as { state?: { addItem?: boolean; openItem?: string } };
   const assets = useAssets();
+  const usedIn = workflowsUsing(m.id, useWorkflows());
 
   const [openId, setOpenId] = useState<string | null>(location.state?.openItem ?? null);
   const [adding, setAdding] = useState(!!location.state?.addItem);
@@ -196,7 +198,11 @@ function ModuleView({ m }: { m: Module }) {
             <div><dt>Items</dt><dd>{m.items.length}{m.kind === 'evaluative' && <span className="muted"> · {modulePoints(m)} points</span>}</dd></div>
             <div><dt>Created</dt><dd><Byline stamp={m.created} time /></dd></div>
             <div><dt>Last edited</dt><dd><Byline stamp={m.edited} time /></dd></div>
-            <div><dt>Used in</dt><dd className="muted">No assessments yet</dd></div>
+            <div><dt>Used in</dt><dd>
+              {usedIn.length
+                ? <ul className="uses">{usedIn.map((x) => <li key={x.id}><Link to={contentRoutes.workflow(x.id)} className="row-link">{x.name}</Link></li>)}</ul>
+                : <span className="muted">No OA workflows yet</span>}
+            </dd></div>
           </dl>
           <h3 className="detail__h3">Activity</h3>
           <ActivityList items={m.history} limit={8} />

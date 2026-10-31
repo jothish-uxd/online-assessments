@@ -48,10 +48,11 @@ export const SEED_MODULES: Module[] = [
     ],
   },
   {
-    id: 'm-proctoring', name: 'Camera and recording consent', kind: 'non-evaluative', status: 'in-review',
+    id: 'm-proctoring', name: 'Camera and recording consent', kind: 'non-evaluative', status: 'published',
     description: 'Added only to proctored assessments: camera set-up and consent to be recorded.',
-    created: st('hera', '2026-10-15T13:20'), edited: st('mon', '2026-10-19T16:50'),
+    created: st('hera', '2026-10-15T13:20'), edited: st('mon', '2026-10-20T09:10'),
     history: [
+      log('mon', '2026-10-20T09:10', 'Published'),
       log('mon', '2026-10-19T16:50', 'Left feedback: link the recording policy from item 2'),
       log('hera', '2026-10-17T10:10', 'Sent for review'),
       log('hera', '2026-10-15T13:20', 'Created the module'),
