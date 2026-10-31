@@ -14,6 +14,7 @@ import '../../styles/workflow.css';
 import { BASE, contentRoutes } from './routes';
 import '../../styles/content.css';
 import '../../styles/scores.css';
+import '../../styles/misbehavior.css';
 
 
 /** Assessment content: one app in its own frame, sectioned by horizontal tabs. */

@@ -1,11 +1,12 @@
 import { peek, put, useStored } from '../store';
 import { now } from './store';
 import { SEED_WORKFLOWS } from './seedWorkflows';
-import type { Activity, Module, Score, Stage, Step, Variation, Workflow, WorkflowSettings } from './types';
+import type { Activity, Misbehavior, Module, Score, Stage, Step, Variation, Workflow, WorkflowSettings } from './types';
 import { checkR, checkScratch, inputsFor, outputsOf } from './scoring';
+import { NO_VIDEO_DEVICES, defaultMisbehavior } from './misbehavior';
 
-// v3: workflows gained composite scores.
-const KEY = 'content:v3:workflows';
+// v4: workflows gained composite scores and misbehavior settings.
+const KEY = 'content:v4:workflows';
 const all = () => peek<Workflow[]>(KEY) ?? SEED_WORKFLOWS;
 export const useWorkflows = () => useStored<Workflow[]>(KEY, () => SEED_WORKFLOWS)[0];
 
@@ -51,6 +52,7 @@ export function createWorkflow(name: string): Workflow {
   const w: Workflow = {
     id: uid('w'), name: name.trim(), code, type: 'Candidate', stage: 'build', version: 1, dirty: true, steps: [],
     scoring: { variations: [], scores: [] },
+    misbehavior: defaultMisbehavior(),
     settings: { ...SEED_WORKFLOWS[0].settings, ats: [], devices: ['desktop'], equivalent: [],
       reviewers: { ops: [], program: [], e2e: null, signoff: [], launch: null } },
     created: stamp, edited: stamp, history: [{ ...stamp, action: 'Created the workflow' }],
@@ -69,6 +71,13 @@ export function insertStep(id: string, index: number, step: Omit<Step, 'id'>, la
   patch(id, (w) => {
     const steps = [...w.steps];
     steps.splice(index, 0, { ...step, id: stepId } as Step);
+    // Checkpoints added on the graph switch on the settings behind them.
+    const mb = w.misbehavior;
+    if (step.kind === 'id-check') return { ...w, steps, misbehavior: { ...mb, selfie: { ...mb.selfie, on: true } } };
+    if (step.kind === 'proctoring' && !mb.image.on && !mb.video.on) {
+      const videoOk = !w.settings.devices.some((d) => NO_VIDEO_DEVICES.includes(d));
+      return { ...w, steps, misbehavior: { ...mb, selfie: { ...mb.selfie, on: true }, [videoOk ? 'video' : 'image']: { ...mb[videoOk ? 'video' : 'image'], on: true } } as Misbehavior };
+    }
     return { ...w, steps };
   }, `Added ${label}`);
   return stepId;
@@ -86,7 +95,66 @@ export function moveStep(id: string, stepId: string, toIndex: number, label: str
 }
 
 export function removeStep(id: string, stepId: string, label: string) {
-  patch(id, (w) => ({ ...w, steps: w.steps.filter((s) => s.id !== stepId) }), `Removed ${label}`);
+  patch(id, (w) => {
+    const step = w.steps.find((s) => s.id === stepId);
+    const steps = w.steps.filter((s) => s.id !== stepId);
+    // The proctoring check is where camera proctoring starts; without it, there's none.
+    if (step?.kind === 'proctoring') {
+      return { ...w, steps, misbehavior: { ...w.misbehavior, image: { ...w.misbehavior.image, on: false }, video: { ...w.misbehavior.video, on: false } } };
+    }
+    return { ...w, steps };
+  }, `Removed ${label}`);
+}
+
+/* ---------- Misbehavior settings ---------- */
+
+/** Where a checkpoint goes: after the opening content modules, before the first evaluation module. */
+function checkpointIndex(w: Workflow, modules: Module[], kind: 'id-check' | 'proctoring') {
+  const firstEval = w.steps.findIndex((s) => s.kind === 'module' && modules.find((m) => m.id === s.moduleId)?.kind === 'evaluative');
+  let at = firstEval < 0 ? w.steps.length : firstEval;
+  if (kind === 'id-check') {
+    const p = w.steps.findIndex((s) => s.kind === 'proctoring');
+    if (p >= 0 && p < at) at = p;
+  }
+  return at;
+}
+
+export function updateMisbehavior(id: string, fn: (m: Misbehavior) => Misbehavior, action: string) {
+  patch(id, (w) => ({ ...w, misbehavior: fn(w.misbehavior) }), action);
+}
+
+/** ID validation and verification: adds or removes the ID verification step, and turns on selfie capture it depends on. */
+export function setIdVerification(id: string, on: boolean, modules: Module[]) {
+  patch(id, (w) => {
+    if (on) {
+      if (w.steps.some((s) => s.kind === 'id-check')) return w;
+      const steps = [...w.steps];
+      steps.splice(checkpointIndex(w, modules, 'id-check'), 0, { id: uid('s'), kind: 'id-check' });
+      return { ...w, steps, misbehavior: { ...w.misbehavior, selfie: { ...w.misbehavior.selfie, on: true } } };
+    }
+    return { ...w, steps: w.steps.filter((s) => s.kind !== 'id-check') };
+  }, on ? 'Turned on ID validation and verification' : 'Turned off ID validation and verification');
+}
+
+/** Image or video proctoring: keeps the proctoring check on the graph while either is on. */
+export function setCameraProctoring(id: string, kind: 'image' | 'video', on: boolean, modules: Module[]) {
+  patch(id, (w) => {
+    const mb = { ...w.misbehavior, [kind]: { ...w.misbehavior[kind], on } } as Misbehavior;
+    if (on) mb.selfie = { ...mb.selfie, on: true };
+    const anyCamera = mb.image.on || mb.video.on;
+    let steps = w.steps;
+    if (anyCamera && !steps.some((s) => s.kind === 'proctoring')) {
+      steps = [...steps];
+      steps.splice(checkpointIndex(w, modules, 'proctoring'), 0, { id: uid('s'), kind: 'proctoring' });
+    }
+    if (!anyCamera) steps = steps.filter((s) => s.kind !== 'proctoring');
+    return { ...w, steps, misbehavior: mb };
+  }, `${on ? 'Turned on' : 'Turned off'} ${kind} proctoring`);
+}
+
+/** Video proctoring can't run on phones, tablets or TVs. */
+export function dropNonVideoDevices(id: string) {
+  patch(id, (w) => ({ ...w, settings: { ...w.settings, devices: w.settings.devices.filter((d) => !NO_VIDEO_DEVICES.includes(d)) } }), 'Limited devices to desktop and laptop for video proctoring');
 }
 
 export function updateWorkflow(id: string, p: Partial<Pick<Workflow, 'name'>>, action = 'Renamed the workflow') {
@@ -196,6 +264,12 @@ export function validate(w: Workflow, modules: Module[]): Issue[] {
       if (checkScratch(sc, taken, k.all).length) out.push({ text: `Score ${sc.name} needs fixing on Composite scores.` });
     }
   });
+  const mb = w.misbehavior;
+  const hasProctorStep = w.steps.some((s) => s.kind === 'proctoring');
+  if (hasProctorStep && !mb.image.on && !mb.video.on) out.push({ text: 'The proctoring check is on the graph, but image and video proctoring are both off. Turn one on in Misbehavior settings, or remove the check.', stepId: w.steps.find((s) => s.kind === 'proctoring')!.id });
+  if (mb.video.on && w.settings.devices.some((d) => NO_VIDEO_DEVICES.includes(d))) out.push({ text: 'Video proctoring only works on desktop and laptop. Remove the other supported devices, or turn video off.' });
+  if (w.steps.some((s) => s.kind === 'id-check') && !mb.id.documents.length) out.push({ text: 'Choose at least one ID document candidates can show.' });
+  if (w.steps.some((s) => s.kind === 'id-check') && !mb.selfie.on) out.push({ text: 'ID verification compares the ID photo with a selfie. Turn on selfie capture.' });
   if (!(w.settings.linkDays > 0)) out.push({ text: 'Set how many days the workflow link stays open.' });
   if (!(w.settings.scoreDays > 0)) out.push({ text: 'Set how many days scores stay valid.' });
   if (!w.settings.ats.length) out.push({ text: 'Choose at least one supported ATS.' });

@@ -13,6 +13,7 @@ import type { Stage, Workflow } from '../../../data/content/types';
 import { contentRoutes, type WorkflowTab } from '../routes';
 import BuilderGraph from './BuilderGraph';
 import CompositeScores from './scores/CompositeScores';
+import Misbehavior from './Misbehavior';
 
 const TABS: { id: WorkflowTab; label: string }[] = [
   { id: 'builder', label: 'Builder graph' },
@@ -160,7 +161,7 @@ function Editor({ w }: { w: Workflow }) {
         </nav>
       </div>
 
-      {!editable && (tab === 'builder' || tab === 'scores') && (
+      {!editable && (tab === 'builder' || tab === 'scores' || tab === 'misbehavior') && (
         <p className="readonly-note wf-readonly">
           In {STAGES[si].label}, the workflow is locked so reviewers see exactly what they approve.
           Use <strong>More workflow actions</strong> to {w.stage === 'live' ? 'edit it as a new draft' : 'move it back to Build'}.
@@ -175,14 +176,14 @@ function Editor({ w }: { w: Workflow }) {
         </section>
       )}
       {tab === 'scores' && <CompositeScores w={w} editable={editable} />}
-      {(tab === 'misbehavior' || tab === 'test-plan') && (
+      {tab === 'misbehavior' && <Misbehavior w={w} editable={editable} />}
+      {tab === 'test-plan' && (
         <section className="wf-section">
           <h2 className="section-title">{TABS.find((t) => t.id === tab)!.label}</h2>
           <div className="soon soon--inline">
             <div className="soon__body">
               <p className="page-kicker">Coming soon</p>
               <p className="page-lede">
-                {tab === 'misbehavior' && 'Which proctoring events count as misbehavior, and what happens when they’re detected.'}
                 {tab === 'test-plan' && 'Candidate response scenarios (all correct, all wrong, mixed and boundary cases) and their expected outcomes.'}
               </p>
             </div>

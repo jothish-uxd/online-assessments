@@ -139,6 +139,7 @@ export interface Workflow {
   steps: Step[];
   settings: WorkflowSettings;
   scoring: Scoring;
+  misbehavior: Misbehavior;
   created: Stamp;
   edited: Stamp;
   history: Activity[];
@@ -193,3 +194,19 @@ export interface RScore {
 export type Score = ScratchScore | RScore;
 
 export interface Scoring { variations: Variation[]; scores: Score[] }
+
+/* ---------- Misbehavior settings ---------- */
+
+export type FlagAction = 'flag' | 'warn';
+export interface Detection { on: boolean; action: FlagAction }
+
+export interface Misbehavior {
+  /** ID validation and verification is on when the workflow has an ID verification step. */
+  id: { documents: string[]; attempts: number; onFail: 'block' | 'review' };
+  selfie: { on: boolean; badge: boolean; onsite: boolean; retentionDays: number };
+  image: { on: boolean; perHour: number; faceMatch: boolean };
+  video: { on: boolean; audio: boolean; retentionDays: number };
+  camera: Record<string, Detection>;
+  browser: Record<string, Detection>;
+  review: { threshold: number; holdResults: boolean };
+}

@@ -1,0 +1,66 @@
+/* Misbehavior settings */
+.mis-intro { margin-top: 4px; max-width: 72ch; }
+.mis { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 40px; align-items: start; }
+.mis__main { gap: 16px; }
+.mis__group { margin: 12px 0 0; font-size: 13px; font-weight: 600; color: var(--ink-soft); text-transform: none; }
+.mis__group:first-of-type { margin-top: 0; }
+.mis__groupnote { margin-top: -8px; max-width: 70ch; }
+.mis__note { padding: 10px 14px; border-left: 3px solid var(--ink); background: var(--bg-subtle); font-size: 13.5px; color: var(--ink-soft); }
+
+.setting { display: grid; gap: 10px; padding: 18px 20px; border: 1px solid var(--rule); border-radius: 10px; background: var(--bg); }
+.setting.is-on { border-color: var(--ink-faint); }
+.setting__head { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
+.setting__text { display: grid; gap: 2px; min-width: 0; }
+.setting__title { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600; }
+.setting__title .icon { width: 17px; height: 17px; }
+.setting__summary { font-size: 14px; color: var(--ink); }
+.setting__body { display: grid; gap: 8px; max-width: 72ch; font-size: 13.5px; color: var(--ink-soft); }
+.setting__body b { color: var(--ink); font-weight: 600; }
+.mis__meta { font-size: 12.5px; }
+.setting__locked { font-size: 12.5px; color: var(--ink); font-weight: 500; }
+.setting__options { display: grid; gap: 16px; margin-top: 6px; padding-top: 16px; border-top: 1px solid var(--rule); }
+.mis__pair { display: flex; flex-wrap: wrap; gap: 16px 24px; align-items: flex-end; }
+.mis__pair .select__anchor { min-width: 230px; }
+.mis__check { margin-bottom: 8px; }
+.mis__conflict { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border: 1.5px dashed var(--ink); border-radius: 8px; font-size: 13.5px; }
+.mis__conflict > .icon { margin-top: 2px; }
+.mis__conflict div { display: grid; gap: 10px; justify-items: start; }
+
+/* Switch */
+.switch { appearance: none; display: inline-flex; align-items: center; gap: 8px; flex: none; padding: 4px; margin: -4px; border: 0; background: none; cursor: pointer; font: inherit; border-radius: 6px; }
+.switch__track { position: relative; width: 36px; height: 20px; border-radius: 999px; border: 1.5px solid var(--ink-faint); background: var(--bg); transition: background .12s ease; }
+.switch__thumb { position: absolute; top: 2px; left: 2px; width: 13px; height: 13px; border-radius: 50%; background: var(--ink-soft); transition: transform .12s ease; }
+.switch[aria-checked="true"] .switch__track { background: var(--ink); border-color: var(--ink); }
+.switch[aria-checked="true"] .switch__thumb { transform: translateX(16px); background: var(--on-ink); }
+.switch__text { min-width: 2.2ch; font-size: 13px; font-weight: 500; }
+.switch[aria-disabled="true"], .switch:disabled { cursor: not-allowed; opacity: .55; }
+@media (forced-colors: active) { .switch[aria-checked="true"] .switch__track { background: Highlight; } }
+
+/* Detection tables */
+.detections__cap { caption-side: top; text-align: left; padding-bottom: 6px; font-size: 13.5px; font-weight: 600; }
+.detections .table td { width: 210px; }
+.detections .select__anchor { min-width: 190px; }
+.detections__check { align-items: flex-start; font-weight: 400; }
+.detections__check input { margin-top: 3px; }
+.detections tr.is-blocked .cell-strong { color: var(--ink-faint); }
+.detections__need { font-weight: 600; color: var(--ink); }
+
+.mis__review { display: grid; gap: 16px; padding: 18px 20px; border: 1px solid var(--rule); border-radius: 10px; }
+
+/* Summary */
+.mis__summary { position: sticky; top: 16px; display: grid; gap: 10px; padding: 18px 20px; border: 1px solid var(--rule-strong); border-radius: 10px; background: var(--bg-subtle); font-size: 13.5px; }
+.mis__sumhead { margin-top: 6px; font-size: 12.5px; font-weight: 600; color: var(--ink-soft); }
+.mis__steps { display: grid; gap: 6px; padding-left: 20px; list-style: decimal; }
+.mis__steps--dots { list-style: disc; }
+.mis__facts { margin-top: 8px; padding-top: 12px; border-top: 1px solid var(--rule); }
+.mis__kept { display: grid; gap: 4px; }
+
+@media (max-width: 1180px) {
+  .mis { grid-template-columns: 1fr; }
+  .mis__summary { position: static; }
+}
+@media (max-width: 700px) {
+  .detections .table td { width: auto; }
+  .setting__head { flex-direction: column; }
+}
+.detections .table-wrap { overflow: visible; }
