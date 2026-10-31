@@ -1,9 +1,11 @@
 import { peek, put, useStored } from '../store';
 import { now } from './store';
 import { SEED_WORKFLOWS } from './seedWorkflows';
-import type { Activity, Module, Stage, Step, Workflow, WorkflowSettings } from './types';
+import type { Activity, Module, Score, Stage, Step, Variation, Workflow, WorkflowSettings } from './types';
+import { checkR, checkScratch, inputsFor, outputsOf } from './scoring';
 
-const KEY = 'content:v2:workflows';
+// v3: workflows gained composite scores.
+const KEY = 'content:v3:workflows';
 const all = () => peek<Workflow[]>(KEY) ?? SEED_WORKFLOWS;
 export const useWorkflows = () => useStored<Workflow[]>(KEY, () => SEED_WORKFLOWS)[0];
 
@@ -48,6 +50,7 @@ export function createWorkflow(name: string): Workflow {
   const code = `${name.trim().toUpperCase().replace(/[^A-Z0-9]+/g, '_').replace(/^_|_$/g, '')}_${String(Math.floor(Math.random() * 99999)).padStart(5, '0')}`;
   const w: Workflow = {
     id: uid('w'), name: name.trim(), code, type: 'Candidate', stage: 'build', version: 1, dirty: true, steps: [],
+    scoring: { variations: [], scores: [] },
     settings: { ...SEED_WORKFLOWS[0].settings, ats: [], devices: ['desktop'], equivalent: [],
       reviewers: { ops: [], program: [], e2e: null, signoff: [], launch: null } },
     created: stamp, edited: stamp, history: [{ ...stamp, action: 'Created the workflow' }],
@@ -106,6 +109,52 @@ export function setStage(id: string, stage: Stage, action: string) {
   patch(id, (w) => ({ ...w, stage }), action, false);
 }
 
+/* ---------- Composite scores ---------- */
+
+export const newId = uid;
+
+export function addScore(id: string, score: Score, action: string) {
+  patch(id, (w) => ({ ...w, scoring: { ...w.scoring, scores: [...w.scoring.scores, score] } }), action);
+}
+export function replaceScore(id: string, score: Score, action: string) {
+  patch(id, (w) => ({ ...w, scoring: { ...w.scoring, scores: w.scoring.scores.map((x) => (x.id === score.id ? score : x)) } }), action);
+}
+export function removeScore(id: string, scoreId: string, action: string) {
+  patch(id, (w) => ({ ...w, scoring: { ...w.scoring, scores: w.scoring.scores.filter((x) => x.id !== scoreId) } }), action);
+}
+export function moveScore(id: string, scoreId: string, d: -1 | 1) {
+  patch(id, (w) => {
+    const list = [...w.scoring.scores];
+    const i = list.findIndex((x) => x.id === scoreId);
+    const j = i + d;
+    if (i < 0 || j < 0 || j >= list.length) return w;
+    [list[i], list[j]] = [list[j], list[i]];
+    return { ...w, scoring: { ...w.scoring, scores: list } };
+  }, 'Reordered scores');
+}
+export function saveVariation(id: string, v: Variation, action: string) {
+  patch(id, (w) => {
+    const others = w.scoring.variations.filter((x) => x.id !== v.id).map((x) => (v.isDefault ? { ...x, isDefault: false } : x));
+    return { ...w, scoring: { ...w.scoring, variations: [...others, v] } };
+  }, action);
+}
+export function deleteVariation(id: string, variationId: string, name: string) {
+  patch(id, (w) => ({
+    ...w,
+    scoring: {
+      variations: w.scoring.variations.filter((x) => x.id !== variationId),
+      scores: w.scoring.scores.map((x) => (x.variationId === variationId ? { ...x, variationId: null } : x)),
+    },
+  }), `Deleted variation ${name}`);
+}
+
+/** Every score name available to conditions and references: inputs, then outputs of other scores. */
+export function knownScores(w: Workflow, modules: Module[], exceptScoreId?: string) {
+  const inputs = inputsFor(w.steps, modules).map((x) => x.name);
+  const outputs = w.scoring.scores.filter((x) => x.id !== exceptScoreId).flatMap(outputsOf);
+  return { inputs, outputs, all: [...inputs, ...outputs] };
+}
+
 /** Workflows that use a module, for the module's "Used in". */
 export const workflowsUsing = (moduleId: string, list: Workflow[]) =>
   list.filter((w) => w.steps.some((s) => s.kind === 'module' && s.moduleId === moduleId));
@@ -136,6 +185,17 @@ export function validate(w: Workflow, modules: Module[]): Issue[] {
   if (pIdx >= 0 && firstEval >= 0 && pIdx > firstEval) out.push({ text: 'Move the proctoring check above the first evaluative module, so every scored item is recorded.', stepId: w.steps[pIdx].id });
   if (pIdx >= 0 && idIdx > pIdx) out.push({ text: 'Put ID verification before the proctoring check.', stepId: w.steps[idIdx].id });
   if (w.steps.length && w.steps[0].kind !== 'module') out.push({ text: 'Start with a module, such as consent, before any checkpoint.', stepId: w.steps[0].id });
+  if (!w.scoring.scores.length) out.push({ text: 'Add at least one composite score.' });
+  w.scoring.scores.forEach((sc) => {
+    const k = knownScores(w, modules, sc.id);
+    if (sc.kind === 'r') {
+      const n = checkR(sc.formula, k.all).errors.length;
+      if (n) out.push({ text: `The R formula has ${n} error${n === 1 ? '' : 's'}. Check it on Composite scores.` });
+    } else {
+      const taken = w.scoring.scores.filter((x) => x.id !== sc.id).flatMap(outputsOf);
+      if (checkScratch(sc, taken, k.all).length) out.push({ text: `Score ${sc.name} needs fixing on Composite scores.` });
+    }
+  });
   if (!(w.settings.linkDays > 0)) out.push({ text: 'Set how many days the workflow link stays open.' });
   if (!(w.settings.scoreDays > 0)) out.push({ text: 'Set how many days scores stay valid.' });
   if (!w.settings.ats.length) out.push({ text: 'Choose at least one supported ATS.' });

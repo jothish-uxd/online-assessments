@@ -138,7 +138,58 @@ export interface Workflow {
   dirty: boolean;
   steps: Step[];
   settings: WorkflowSettings;
+  scoring: Scoring;
   created: Stamp;
   edited: Stamp;
   history: Activity[];
 }
+
+/* ---------- Composite scores ---------- */
+
+export type VariationCategory = 'country' | 'job-level' | 'region' | 'language';
+export interface VariationRule { category: VariationCategory; op: 'is' | 'is-not'; values: string[] }
+/** A slice of candidates that can get their own scores, e.g. Outer Rim applicants. */
+export interface Variation { id: string; name: string; isDefault: boolean; rules: VariationRule[]; created: Stamp }
+
+export type Operand = '=' | '!=' | '>' | '>=' | '<' | '<=';
+export interface Expression { id: string; join: 'AND' | 'OR'; condition: string; operand: Operand | ''; value: string }
+/** Use `reference` when every expression holds. The first mapping that holds wins. */
+export interface Mapping { id: string; reference: string; expressions: Expression[] }
+export interface Band { id: string; min: string; max: string; label: string }
+export interface Weight { id: string; input: string; weight: string }
+
+export interface ScratchScore {
+  id: string;
+  kind: 'scratch';
+  name: string;
+  pc: boolean;
+  sendToAts: boolean;
+  type: 'conditional' | 'reference' | 'weighted';
+  /** conditional: map to reference scores, or band one score into labels */
+  mode: 'reference' | 'band';
+  mappings: Mapping[];
+  bandSource: string;
+  bands: Band[];
+  reference: string;
+  weights: Weight[];
+  /** null = applies to every candidate */
+  variationId: string | null;
+  created: Stamp;
+  edited: Stamp;
+}
+
+export interface ROutput { name: string; type: 'Conditional' | 'Formula'; pc: boolean; sendToAts: boolean }
+export interface RScore {
+  id: string;
+  kind: 'r';
+  name: string;
+  formula: string;
+  outputs: ROutput[];
+  variationId: string | null;
+  created: Stamp;
+  edited: Stamp;
+}
+
+export type Score = ScratchScore | RScore;
+
+export interface Scoring { variations: Variation[]; scores: Score[] }

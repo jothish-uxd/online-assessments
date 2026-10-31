@@ -13,6 +13,7 @@ import WorkflowPage from './workflow/WorkflowPage';
 import '../../styles/workflow.css';
 import { BASE, contentRoutes } from './routes';
 import '../../styles/content.css';
+import '../../styles/scores.css';
 
 
 /** Assessment content: one app in its own frame, sectioned by horizontal tabs. */

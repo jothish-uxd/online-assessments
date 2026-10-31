@@ -14,6 +14,11 @@ interface Props<T extends string | number> {
   inline?: boolean;
   /** Keep the label for screen readers only (the context already names the field) */
   hideLabel?: boolean;
+  /** Shown when the value isn't one of the options, e.g. "Select an option" */
+  placeholder?: string;
+  invalid?: boolean;
+  /** id for the button, so error summaries can link to it */
+  buttonId?: string;
 }
 
 /**
@@ -22,10 +27,11 @@ interface Props<T extends string | number> {
  * Keys: Enter, Space, Alt+Down or Down to open; Up/Down, Home/End and typing to move;
  * Enter or Space to choose; Escape to close without choosing; Tab chooses and moves on.
  */
-export default function Select<T extends string | number>({ label, value, options, onChange, className, describedBy, inline, hideLabel }: Props<T>) {
+export default function Select<T extends string | number>({ label, value, options, onChange, className, describedBy, inline, hideLabel, placeholder, invalid, buttonId }: Props<T>) {
   const id = useId();
   const [open, setOpen] = useState(false);
-  const selected = Math.max(0, options.findIndex((o) => o.value === value));
+  const found = options.findIndex((o) => o.value === value);
+  const selected = Math.max(0, found);
   const [active, setActive] = useState(selected);
   const [above, setAbove] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -109,6 +115,7 @@ export default function Select<T extends string | number>({ label, value, option
       <div className="select__anchor">
         <button
           ref={buttonRef}
+          id={buttonId}
           type="button"
           role="combobox"
           className="select__button"
@@ -117,12 +124,13 @@ export default function Select<T extends string | number>({ label, value, option
           aria-controls={`${id}-list`}
           aria-labelledby={`${id}-label`}
           aria-describedby={describedBy}
+          aria-invalid={invalid || undefined}
           aria-activedescendant={open ? `${id}-opt-${active}` : undefined}
           onClick={() => (open ? setOpen(false) : openList())}
           onKeyDown={onKeyDown}
           onBlur={(e) => { if (!wrapRef.current?.contains(e.relatedTarget as Node)) setOpen(false); }}
         >
-          <span className="select__value">{options[selected]?.label}</span>
+          <span className={`select__value${found < 0 && placeholder ? ' is-placeholder' : ''}`}>{found < 0 && placeholder ? placeholder : options[selected]?.label}</span>
           <svg className="select__chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" /></svg>
         </button>
         <ul
@@ -140,7 +148,7 @@ export default function Select<T extends string | number>({ label, value, option
               id={`${id}-opt-${i}`}
               data-index={i}
               role="option"
-              aria-selected={i === selected}
+              aria-selected={i === found}
               className={`select__option${i === active ? ' is-active' : ''}`}
               onMouseMove={() => setActive(i)}
               onMouseDown={(e) => e.preventDefault()} // keep focus on the button

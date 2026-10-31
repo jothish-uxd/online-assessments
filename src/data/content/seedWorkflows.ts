@@ -1,5 +1,6 @@
 import type { Activity, PersonId, Step, Workflow, WorkflowSettings } from './types';
 import { st } from './seedAssets';
+import { SEED_SCORING } from './seedScoring';
 
 let n = 0;
 const mod = (moduleId: string): Step => ({ id: `s${++n}`, kind: 'module', moduleId });
@@ -42,6 +43,7 @@ export const SEED_WORKFLOWS: Workflow[] = [
       mod('m-pilot'), mod('m-customer-judgement'), mod('m-leadership'), mod('m-written'),
     ],
     settings: base({ devices: ['desktop'], reviewers: { ops: ['hera'], program: [], e2e: null, signoff: [], launch: null } }),
+    scoring: SEED_SCORING['w-pilot'],
     created: st('jyn', '2026-10-06T10:00'), edited: st('leia', '2026-10-29T16:40'),
     history: [
       log('leia', '2026-10-29T16:40', 'Saved version 5'),
@@ -60,6 +62,7 @@ export const SEED_WORKFLOWS: Workflow[] = [
       ats: ['holonet-hire', 'rebel-recruit'], devices: ['desktop', 'tablet'],
       reviewers: { ops: ['hera'], program: ['mon'], e2e: null, signoff: ['mon'], launch: null },
     }),
+    scoring: SEED_SCORING['w-mechanic'],
     created: st('cassian', '2026-10-02T09:00'), edited: st('cassian', '2026-10-27T11:15'),
     history: [
       log('cassian', '2026-10-27T11:15', 'Sent to Program review'),
@@ -75,6 +78,7 @@ export const SEED_WORKFLOWS: Workflow[] = [
       linkDays: 120, scoreDays: 365, ats: ['holonet-hire', 'mon-cala-talent'], devices: ['desktop'],
       reviewers: { ops: ['hera'], program: ['mon'], e2e: ['jyn'], signoff: ['mon'], launch: ['hera'] },
     }),
+    scoring: SEED_SCORING['w-analyst'],
     created: st('jyn', '2026-09-28T08:30'), edited: st('hera', '2026-10-14T09:00'),
     history: [
       log('hera', '2026-10-14T09:00', 'Launched: live for requisitions'),
@@ -90,6 +94,7 @@ export const SEED_WORKFLOWS: Workflow[] = [
     stage: 'build', version: 1, dirty: true,
     steps: [mod('m-consent'), mod('m-medical')],
     settings: base({ devices: ['desktop', 'mobile'] }),
+    scoring: SEED_SCORING['w-medic'],
     created: st('hera', '2026-10-30T08:20'), edited: st('hera', '2026-10-30T08:35'),
     history: [
       log('hera', '2026-10-30T08:35', 'Added Medical frigate triage'),
