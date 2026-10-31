@@ -84,10 +84,21 @@
 .flow__list { display: grid; justify-items: center; width: 100%; }
 .flow__empty { margin: 4px 0 8px; font-size: 13.5px; color: var(--ink-soft); }
 
-/* Each slot is a length of spine with a + in the middle. After the proctoring check, the spine turns to the proctoring colour. */
+/*
+  Patterns from a11y-charts instead of colour, so the codes survive greyscale,
+  colour blindness and dark mode:
+    content: empty strip · evaluation: diagonal · ID verification: dots ·
+    proctoring check: crosshatch · proctored spine: horizontal rungs
+*/
+.pat-diagonal { background-image: repeating-linear-gradient(135deg, var(--ink) 0 1.6px, transparent 1.6px 5px); }
+.pat-dots { background-image: radial-gradient(circle, var(--ink) 1.25px, transparent 1.6px); background-size: 6px 6px; background-position: 1px 1px; }
+.pat-crosshatch { background-image: repeating-linear-gradient(45deg, var(--ink) 0 1px, transparent 1px 5px), repeating-linear-gradient(135deg, var(--ink) 0 1px, transparent 1px 5px); }
+.pat-horizontal { background-image: repeating-linear-gradient(180deg, var(--ink) 0 2px, transparent 2px 6px); }
+
+/* Each slot is a length of spine with a + in the middle. After the proctoring check, the spine becomes a ladder of rungs. */
 .slot { position: relative; display: grid; place-items: center; width: 100%; height: 48px; }
 .slot::before { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; margin-left: -1px; background: var(--rule-strong); }
-.slot.is-proctored::before { width: 4px; margin-left: -2px; background: var(--proctor-rule); }
+.slot.is-proctored::before { width: 10px; margin-left: -5px; background: var(--bg) repeating-linear-gradient(180deg, var(--ink) 0 2px, transparent 2px 6px); border-left: 1.5px solid var(--ink); border-right: 1.5px solid var(--ink); }
 .flow > .slot:first-child::before { top: 50%; }
 .flow__list > li:last-child .slot::before { bottom: 50%; }
 .slot__add {
@@ -117,7 +128,17 @@
 }
 .node[draggable="true"] { cursor: grab; }
 .node[draggable="true"]:active { cursor: grabbing; }
-.node--eval { box-shadow: inset 5px 0 0 var(--eval); border-color: color-mix(in srgb, var(--eval) 45%, var(--rule-strong)); }
+/* Every node has a left strip; its pattern says what kind of step it is. */
+.node { box-shadow: none; padding-left: 26px; overflow: visible; }
+.node::before {
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 12px;
+  border-right: 1px solid var(--rule-strong); border-radius: 7px 0 0 7px; background-color: var(--bg-subtle);
+}
+.node--eval { border-color: var(--ink-faint); }
+.node--eval::before { border-right-color: var(--ink); background-image: repeating-linear-gradient(135deg, var(--ink) 0 1.6px, transparent 1.6px 5px); }
+.node--id-check::before { border-right-color: var(--ink); background-image: radial-gradient(circle, var(--ink) 1.25px, transparent 1.6px); background-size: 6px 6px; background-position: 1px 1px; }
+.node--proctoring::before { border-right-color: var(--ink); background-image: repeating-linear-gradient(45deg, var(--ink) 0 1px, transparent 1px 5px), repeating-linear-gradient(135deg, var(--ink) 0 1px, transparent 1px 5px); }
+.node--missing::before { background: none; border-right-style: dashed; }
 .node--missing { border-style: dashed; box-shadow: none; }
 .node__body { display: grid; gap: 1px; min-width: 0; }
 .node__kind { font-size: 12px; color: var(--ink-soft); }
@@ -125,16 +146,15 @@
 .node__name { font-size: 14px; font-weight: 500; line-height: 1.35; overflow-wrap: anywhere; }
 .node__details { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--rule); font-size: 12.5px; color: var(--ink-soft); }
 .node__details .status { font-size: 12.5px; }
-.node__grip { position: absolute; left: 6px; top: 50%; transform: translateY(-50%); color: var(--ink-faint); opacity: 0; transition: opacity .12s ease; }
+.node__grip { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--ink-faint); opacity: 0; transition: opacity .12s ease; }
 .node__grip .icon { width: 14px; height: 14px; }
 .node:hover .node__grip { opacity: 1; }
 
 /* Checkpoints: smaller, tinted, centred on the spine. */
 .node--id-check, .node--proctoring {
-  width: auto; min-height: 0; justify-content: center; padding: 8px 36px 8px 16px; box-shadow: none; text-align: center;
+  width: auto; min-height: 0; justify-content: center; padding: 8px 36px 8px 26px; text-align: center;
 }
-.node--id-check { background: var(--id-bg); border-color: var(--id-rule); color: var(--id-ink); }
-.node--proctoring { background: var(--proctor-bg); border-color: var(--proctor-rule); color: var(--proctor-ink); }
+.node--id-check, .node--proctoring { border-color: var(--ink); color: var(--ink); }
 .node__check { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; font-weight: 600; }
 .node__check .icon { width: 15px; height: 15px; }
 .node__check--stack { flex-direction: column; gap: 2px; }
@@ -171,10 +191,10 @@
 .addpop__opt:disabled { cursor: not-allowed; color: var(--ink-faint); }
 .addpop__icon { display: grid; place-items: center; width: 26px; height: 26px; flex: none; border-radius: 6px; border: 1px solid; }
 .addpop__icon .icon { width: 15px; height: 15px; }
-.addpop__opt--id-check .addpop__icon { background: var(--id-bg); border-color: var(--id-rule); color: var(--id-ink); }
-.addpop__opt--proctoring .addpop__icon { background: var(--proctor-bg); border-color: var(--proctor-rule); color: var(--proctor-ink); }
+.addpop__icon { color: var(--ink); background: var(--bg); }
 .addpop__bar { width: 4px; align-self: stretch; flex: none; border-radius: 2px; background: var(--rule-strong); }
-.addpop__opt--evaluative .addpop__bar { background: var(--eval); }
+.addpop__bar { width: 8px; border: 1px solid var(--rule-strong); background-color: var(--bg-subtle); }
+.addpop__opt--evaluative .addpop__bar { border-color: var(--ink); background-image: repeating-linear-gradient(135deg, var(--ink) 0 1.4px, transparent 1.4px 4.5px); }
 .addpop__opt:disabled .addpop__bar, .addpop__opt:disabled .addpop__icon { opacity: .45; }
 .addpop__text { display: grid; min-width: 0; }
 .addpop__name { font-size: 13.5px; font-weight: 500; line-height: 1.3; }
@@ -183,11 +203,13 @@
 
 .legend { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 12px; padding-top: 16px; border-top: 1px solid var(--rule); font-size: 12.5px; color: var(--ink-soft); }
 .legend li { display: inline-flex; align-items: center; gap: 8px; }
-.legend__sw { width: 18px; height: 14px; border-radius: 3px; border: 1px solid var(--rule-strong); background: var(--bg); }
-.legend__sw--content { box-shadow: inset 4px 0 0 var(--rule-strong); }
-.legend__sw--eval { box-shadow: inset 4px 0 0 var(--eval); }
-.legend__sw--id { background: var(--id-bg); border-color: var(--id-rule); }
-.legend__sw--proctor { width: 4px; border: 0; border-radius: 2px; background: var(--proctor-rule); }
+.legend__sw { width: 18px; height: 14px; border-radius: 3px; border: 1px solid var(--rule-strong); background-color: var(--bg); flex: none; }
+.legend__sw { border-color: var(--ink); }
+.legend__sw--content { background: var(--bg-subtle); border-color: var(--rule-strong); }
+.legend__sw--eval { background-image: repeating-linear-gradient(135deg, var(--ink) 0 1.6px, transparent 1.6px 5px); }
+.legend__sw--id { background-image: radial-gradient(circle, var(--ink) 1.25px, transparent 1.6px); background-size: 6px 6px; background-position: 1px 1px; }
+.legend__sw--checkpoint { background-image: repeating-linear-gradient(45deg, var(--ink) 0 1px, transparent 1px 5px), repeating-linear-gradient(135deg, var(--ink) 0 1px, transparent 1px 5px); }
+.legend__sw--proctor { width: 10px; height: 18px; border-radius: 0; border-top: 0; border-bottom: 0; border-width: 1.5px; background-image: repeating-linear-gradient(180deg, var(--ink) 0 2px, transparent 2px 6px); }
 
 /* ---------- Settings panel ---------- */
 .wf-settings { border-left: 1px solid var(--rule); padding: 24px 24px 48px; min-height: 100%; }
@@ -221,6 +243,5 @@
   .addpop { left: 50%; transform: translateX(-50%); top: 40px; }
 }
 @media (forced-colors: active) {
-  .node--eval { border-left: 5px solid CanvasText; }
-  .node--id-check, .node--proctoring { border: 2px solid CanvasText; }
+  .node::before, .legend__sw, .slot.is-proctored::before, .addpop__bar { forced-color-adjust: none; --ink: CanvasText; --bg: Canvas; --bg-subtle: Canvas; }
 }

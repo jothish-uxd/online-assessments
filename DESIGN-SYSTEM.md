@@ -112,3 +112,15 @@ Rules:
 Each app tab is a `BrowserFrame` under its own host (`content.onlineassessments.app`, `assess.…`, `hire.…`, `proctor.…`), so every tab reads as a separate product. Inside the frame: `.app-body` (240px `.sidebar` + `.app-main`, which scrolls). An app that isn't built yet uses `ComingSoonApp`: a ghost of the sidebar and toolbar behind a centered "Coming soon" note. Replace it with the real app when it's ready; the frame and host stay.
 
 Shared with Cipher Lab (`jothish-uxd/cipher-lab`), where these components started.
+
+## Workflow step patterns
+
+The builder graph codes steps with a11y-charts fill patterns, not colour, so the codes survive greyscale, colour blindness, dark mode and Windows high contrast. Each node has a 12px left strip; the legend under the graph names each pattern.
+
+| Step | Pattern |
+| --- | --- |
+| Content module (not scored) | Empty strip |
+| Evaluation module (scored) | Diagonal |
+| ID verification | Dots |
+| Proctoring system check | Crosshatch |
+| Proctored from here | Spine becomes a ladder of horizontal rungs |

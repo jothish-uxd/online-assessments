@@ -18,11 +18,6 @@
   --on-ink: #ffffff;      /* text on solid ink (primary button, filled switch) */
   --ok: #107d32;          /* reserved for success text only */
 
-  /* Workflow codes. Always paired with a label or icon, never colour alone. */
-  --eval: #6a3fc8;        /* evaluation (scored) module bar */
-  --id-bg: #fff3cf; --id-ink: #5c4300; --id-rule: #e2bf55;
-  --proctor-bg: #f0eafc; --proctor-ink: #46287d; --proctor-rule: #b9a2ea;
-
   --font: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
@@ -45,9 +40,6 @@
     --focus: #52a8ff;
     --on-ink: #0a0a0a;
     --ok: #62c073;
-    --eval: #a98bf5;
-    --id-bg: #2b2310; --id-ink: #f1d27c; --id-rule: #7a6120;
-    --proctor-bg: #231a37; --proctor-ink: #d2c0f7; --proctor-rule: #5d4794;
   }
 }
 
@@ -64,7 +56,4 @@
   --focus: #52a8ff;
   --on-ink: #0a0a0a;
   --ok: #62c073;
-  --eval: #a98bf5;
-  --id-bg: #2b2310; --id-ink: #f1d27c; --id-rule: #7a6120;
-  --proctor-bg: #231a37; --proctor-ink: #d2c0f7; --proctor-rule: #5d4794;
 }

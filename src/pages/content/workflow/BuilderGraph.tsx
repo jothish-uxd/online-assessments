@@ -183,10 +183,11 @@ export default function BuilderGraph({ w, editable, issues }: Props) {
           </ol>
         </div>
         <ul className="legend" aria-label="Key">
-          <li><span className="legend__sw legend__sw--content" aria-hidden="true" /> Content (not scored)</li>
-          <li><span className="legend__sw legend__sw--eval" aria-hidden="true" /> Evaluation (scored)</li>
-          <li><span className="legend__sw legend__sw--id" aria-hidden="true" /> ID verification</li>
-          <li><span className="legend__sw legend__sw--proctor" aria-hidden="true" /> Proctored from here</li>
+          <li><span className="legend__sw legend__sw--content" aria-hidden="true" /> Content, not scored (empty)</li>
+          <li><span className="legend__sw legend__sw--eval" aria-hidden="true" /> Evaluation, scored (diagonal)</li>
+          <li><span className="legend__sw legend__sw--id" aria-hidden="true" /> ID verification (dots)</li>
+          <li><span className="legend__sw legend__sw--checkpoint" aria-hidden="true" /> Proctoring system check (crosshatch)</li>
+          <li><span className="legend__sw legend__sw--proctor" aria-hidden="true" /> Proctored from here (ladder)</li>
         </ul>
         <span className="visually-hidden" role="status" aria-live="polite">{said}</span>
       </section>
