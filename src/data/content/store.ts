@@ -11,8 +11,9 @@ import { clearFiles, deleteFile, probe, saveFile } from './blobs';
   and anything worth auditing is added to the asset's or module's activity.
 */
 
-const ASSETS = 'content:assets';
-const MODULES = 'content:modules';
+// v2: the larger Star Wars sample set. Older saved edits are left behind.
+const ASSETS = 'content:v2:assets';
+const MODULES = 'content:v2:modules';
 
 export const now = (): Stamp => ({ by: ME, at: new Date().toISOString() });
 const uid = (p: string) => `${p}-${Math.random().toString(36).slice(2, 9)}`;
@@ -211,7 +212,7 @@ export function itemIssues(item: Item): string[] {
   if (item.type === 'content') {
     if (!item.title?.trim()) out.push('Add a heading.');
     if (!item.prompt.trim()) out.push('Add the text candidates read.');
-  } else if (!item.prompt.trim()) out.push(item.type === 'spoken' ? 'Add the content or question candidates respond to.' : 'Add the question.');
+  } else if (!item.prompt.trim()) out.push(item.type === 'spoken' ? 'Add the passage or prompt candidates respond to.' : 'Add the item stem.');
   if (item.choices) {
     const filled = item.choices.filter((c) => c.text.trim());
     const correct = item.choices.filter((c) => c.correct);

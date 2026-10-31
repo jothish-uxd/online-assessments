@@ -13,7 +13,7 @@ export default function OverviewPage() {
     <main id="main" className="main main--solo">
       <section className="hero" aria-labelledby="ov-title">
         <h1 ref={h} tabIndex={-1} id="ov-title" className="page-title">
-          Online assessments, from first question to final report.
+          Online assessments, from first item to final report.
         </h1>
         <p className="page-lede">
           Placeholder. A short summary of Online Assessments goes here: who it is for, what problem

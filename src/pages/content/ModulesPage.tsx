@@ -52,7 +52,7 @@ export default function ModulesPage() {
       <header className="ca-head">
         <div>
           <h1 ref={h} tabIndex={-1} className="ca-title">Modules</h1>
-          <p className="ca-sub">Reusable banks of questions and content. Assessments are built from them.</p>
+          <p className="ca-sub">Reusable banks of items. Assessments are built from them.</p>
         </div>
         <div className="ca-head__actions">
           <button type="button" className="btn btn--primary"
@@ -135,7 +135,7 @@ export default function ModulesPage() {
         footer={
           <>
             <button type="button" className="btn btn--secondary" onClick={() => setCreating(false)}>Cancel</button>
-            <button type="submit" form="new-module" className="btn btn--primary">Create module</button>
+            <button type="submit" form="new-module" className="btn btn--primary">Next</button>
           </>
         }
       >
@@ -160,7 +160,7 @@ export default function ModulesPage() {
                   <span className="risk-card__name">{KIND_TEXT[k]}</span>
                   <span className="risk-card__about">
                     {k === 'evaluative'
-                      ? 'Scored questions and activities, with instructions where needed.'
+                      ? 'Scored items and activities, with instructions where needed.'
                       : 'Not scored: terms, privacy notices, consent and instructions.'}
                   </span>
                 </label>

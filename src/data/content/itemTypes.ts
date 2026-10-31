@@ -40,7 +40,7 @@ export const allowedIn = (t: ItemTypeInfo, kind: ModuleKind) => kind === 'evalua
 
 export const PURPOSES: { value: ContentPurpose; label: string }[] = [
   { value: 'instructions', label: 'Assessment instructions' },
-  { value: 'type-instructions', label: 'Question-type instructions' },
+  { value: 'type-instructions', label: 'Item-type instructions' },
   { value: 'terms', label: 'Terms and conditions' },
   { value: 'privacy', label: 'Privacy notice' },
   { value: 'consent', label: 'Candidate consent' },

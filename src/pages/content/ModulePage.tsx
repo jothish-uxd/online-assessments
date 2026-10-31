@@ -129,7 +129,7 @@ function ModuleView({ m }: { m: Module }) {
           {m.items.length === 0 ? (
             <div className="empty">
               <p className="empty__title">No items yet</p>
-              <p>{m.kind === 'evaluative' ? 'Add questions, activities and any instructions candidates need.' : 'Add terms, privacy notices, consent or instructions.'}</p>
+              <p>{m.kind === 'evaluative' ? 'Add scored items, activities and any instructions candidates need.' : 'Add terms, privacy notices, consent or instructions.'}</p>
             </div>
           ) : (
             <ol className="items">
@@ -214,8 +214,10 @@ function ModuleView({ m }: { m: Module }) {
         open={adding}
         onClose={() => setAdding(false)}
         size="lg"
-        title="Add an item"
-        description={m.kind === 'non-evaluative' ? <p>This module isn’t scored, so it holds content blocks only.</p> : undefined}
+        title={m.items.length ? 'Add an item' : 'Choose the first item’s type'}
+        description={m.kind === 'non-evaluative'
+          ? <p>This module isn’t scored, so it holds content blocks only.</p>
+          : m.items.length ? undefined : <p>You can add more items of any type afterwards.</p>}
         footer={
           <>
             <button type="button" className="btn btn--secondary" onClick={() => setAdding(false)}>Cancel</button>

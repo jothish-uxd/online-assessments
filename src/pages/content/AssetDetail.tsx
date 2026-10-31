@@ -81,7 +81,7 @@ export default function AssetDetail({ asset, onClose }: { asset: Asset; onClose:
                 onChange={(e) => set('alt', e.target.value)} />
               <span id={`${id}-alt-help`} className="field-help">
                 {fields.alt.trim()
-                  ? 'Read to candidates who use a screen reader. Describe what matters for the question.'
+                  ? 'Read to candidates who use a screen reader. Describe what matters for the item.'
                   : <span className="gap-text"><AlertIcon /> Needed before a candidate who can’t see the image can answer.</span>}
               </span>
             </div>
@@ -162,7 +162,7 @@ export default function AssetDetail({ asset, onClose }: { asset: Asset; onClose:
         description={
           <>
             <p>This can’t be undone.</p>
-            {uses.length > 0 && <p className="warn-line"><strong>{uses.length} question{uses.length === 1 ? '' : 's'}</strong> show this asset and will lose their media.</p>}
+            {uses.length > 0 && <p className="warn-line"><strong>{uses.length} item{uses.length === 1 ? '' : 's'}</strong> show this asset and will lose their media.</p>}
           </>
         }
         footer={

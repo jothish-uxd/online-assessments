@@ -160,7 +160,7 @@ export default function AssetsPage() {
         <header className="ca-head">
           <div>
             <h1 ref={h} tabIndex={-1} id="assets-title" className="ca-title">Assets</h1>
-            <p className="ca-sub">Images, video, audio and documents that questions and content blocks can show.</p>
+            <p className="ca-sub">Images, video, audio and documents that items can show.</p>
           </div>
           <div className="ca-head__actions">
             <input ref={fileRef} type="file" multiple accept={ACCEPT} hidden
@@ -287,7 +287,7 @@ export default function AssetsPage() {
                       <td className="num">{spec(a).split(' · ').pop()}</td>
                       <td><Byline stamp={a.created} stacked /></td>
                       <td><Byline stamp={a.edited} stacked /></td>
-                      <td className="num">{uses ? `${uses} question${uses === 1 ? '' : 's'}` : <span className="muted">—</span>}</td>
+                      <td className="num">{uses ? `${uses} item${uses === 1 ? '' : 's'}` : <span className="muted">—</span>}</td>
                     </tr>
                   );
                 })}
@@ -319,7 +319,7 @@ export default function AssetsPage() {
           <>
             <p>This can’t be undone.</p>
             {usedSelected.length > 0 && (
-              <p className="warn-line"><strong>{usedSelected.length} question{usedSelected.length === 1 ? '' : 's'}</strong> in {new Set(usedSelected.map((u) => u.module.id)).size} module{new Set(usedSelected.map((u) => u.module.id)).size === 1 ? '' : 's'} show {selectedIds.length === 1 ? 'this asset' : 'these assets'}. They’ll lose their media.</p>
+              <p className="warn-line"><strong>{usedSelected.length} item{usedSelected.length === 1 ? '' : 's'}</strong> in {new Set(usedSelected.map((u) => u.module.id)).size} module{new Set(usedSelected.map((u) => u.module.id)).size === 1 ? '' : 's'} show {selectedIds.length === 1 ? 'this asset' : 'these assets'}. They’ll lose their media.</p>
             )}
           </>
         }

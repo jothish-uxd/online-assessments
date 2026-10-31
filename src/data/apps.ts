@@ -25,7 +25,7 @@ export const APPS: AppInfo[] = [
     name: 'Assessment content',
     host: 'content.onlineassessments.app',
     audience: 'Research scientists',
-    summary: 'Where scientists keep media assets, build reusable modules of questions, and assemble them into assessments.',
+    summary: 'Where scientists keep media assets, build reusable modules of items, and assemble them into assessments.',
     status: 'in-progress',
   },
   {

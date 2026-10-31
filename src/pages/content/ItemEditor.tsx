@@ -35,7 +35,7 @@ export default function ItemEditor({ moduleId, item, readOnly }: Props) {
     item.type === 'content' ? 'Text candidates read'
     : item.type === 'spoken' ? 'Content to read, and what to say'
     : item.type === 'listen-write' ? 'Instructions'
-    : 'Question';
+    : 'Item stem';
 
   return (
     <fieldset className="item-editor" disabled={readOnly}>

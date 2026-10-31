@@ -76,7 +76,7 @@ export interface Item {
   type: ItemType;
   /** Content blocks: the heading candidates see */
   title?: string;
-  /** Question text, the passage to read aloud, or the body of a content block */
+  /** Item stem, the passage to read aloud, or the body of a content block */
   prompt: string;
   /** Media shown or played with the prompt */
   assetId?: string;
