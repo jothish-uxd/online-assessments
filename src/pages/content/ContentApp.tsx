@@ -39,7 +39,7 @@ export default function ContentApp() {
           <>
             <ResetButton
               what="content"
-              description="Puts back the sample assets and modules, and deletes files uploaded in this browser."
+              description="Puts back the sample assets, modules and OA workflows (with their scores, test plans and comments), and deletes files uploaded in this browser."
               done="Content reset."
               to={contentRoutes.assets()}
               onReset={resetContent}
