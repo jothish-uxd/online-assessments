@@ -2,6 +2,8 @@ import type { Activity, PersonId, Step, Workflow, WorkflowSettings } from './typ
 import { st } from './seedAssets';
 import { SEED_SCORING } from './seedScoring';
 import { defaultMisbehavior } from './misbehavior';
+import { suggestPlan } from './testplan';
+import { SEED_MODULES } from './seedModules';
 
 let n = 0;
 const mod = (moduleId: string): Step => ({ id: `s${++n}`, kind: 'module', moduleId });
@@ -43,9 +45,10 @@ export const SEED_WORKFLOWS: Workflow[] = [
       mod('m-consent'), mod('m-instructions'), idCheck(), mod('m-proctoring'), proctor(),
       mod('m-pilot'), mod('m-customer-judgement'), mod('m-leadership'), mod('m-written'),
     ],
-    settings: base({ devices: ['desktop'], reviewers: { ops: ['hera'], program: [], e2e: null, signoff: [], launch: null } }),
+    settings: base({ devices: ['desktop'], equivalent: ['w-analyst'], reviewers: { ops: ['hera'], program: [], e2e: null, signoff: [], launch: null } }),
     scoring: SEED_SCORING['w-pilot'],
     misbehavior: defaultMisbehavior({ selfie: { on: true, badge: true, onsite: true, retentionDays: 365 }, video: { on: true, audio: true, retentionDays: 90 } }),
+    testPlan: null,
     created: st('jyn', '2026-10-06T10:00'), edited: st('leia', '2026-10-29T16:40'),
     history: [
       log('leia', '2026-10-29T16:40', 'Saved version 5'),
@@ -66,6 +69,7 @@ export const SEED_WORKFLOWS: Workflow[] = [
     }),
     scoring: SEED_SCORING['w-mechanic'],
     misbehavior: defaultMisbehavior({ selfie: { on: true, badge: true, onsite: false, retentionDays: 180 } }),
+    testPlan: null,
     created: st('cassian', '2026-10-02T09:00'), edited: st('cassian', '2026-10-27T11:15'),
     history: [
       log('cassian', '2026-10-27T11:15', 'Sent to Program review'),
@@ -83,6 +87,7 @@ export const SEED_WORKFLOWS: Workflow[] = [
     }),
     scoring: SEED_SCORING['w-analyst'],
     misbehavior: defaultMisbehavior({ selfie: { on: true, badge: true, onsite: true, retentionDays: 365 }, image: { on: true, perHour: 8, faceMatch: true }, video: { on: true, audio: true, retentionDays: 120 }, review: { threshold: 2, holdResults: true } }),
+    testPlan: null,
     created: st('jyn', '2026-09-28T08:30'), edited: st('hera', '2026-10-14T09:00'),
     history: [
       log('hera', '2026-10-14T09:00', 'Launched: live for requisitions'),
@@ -100,6 +105,7 @@ export const SEED_WORKFLOWS: Workflow[] = [
     settings: base({ devices: ['desktop', 'mobile'] }),
     scoring: SEED_SCORING['w-medic'],
     misbehavior: defaultMisbehavior(),
+    testPlan: null,
     created: st('hera', '2026-10-30T08:20'), edited: st('hera', '2026-10-30T08:35'),
     history: [
       log('hera', '2026-10-30T08:35', 'Added Medical frigate triage'),
@@ -107,3 +113,36 @@ export const SEED_WORKFLOWS: Workflow[] = [
     ],
   },
 ];
+
+/* Sample test plans: the mechanic workflow is partway through testing; the analyst one passed before launch. */
+function seedPlans() {
+  const by = (id: string) => SEED_WORKFLOWS.find((w) => w.id === id)!;
+  const mech = by('w-mechanic');
+  mech.testPlan = suggestPlan(mech, SEED_MODULES, SEED_WORKFLOWS);
+  mech.testPlan.created = st('cassian', '2026-10-27T11:30');
+  mech.testPlan.modified = st('hera', '2026-10-29T14:10');
+  const [scoring] = mech.testPlan.suites;
+  scoring.cases.forEach((c, i) => {
+    c.created = st('cassian', '2026-10-27T11:30');
+    if (i < 3) { c.link = `https://assess.onlineassessments.app/t/${mech.code}-TC1.${i + 1}`; c.linkCreated = st('hera', '2026-10-28T09:00'); }
+    if (i === 0) c.result = { tester: 'Wedge Antilles', outcome: 'pass', notes: 'Every module presented; recommendation was Recommended as expected.', entered: st('hera', '2026-10-28T10:20') };
+    if (i === 1) c.result = { tester: 'Wedge Antilles', outcome: 'fail', notes: 'Recommendation came back “Recommended with training” instead of “Not recommended”. The 0.45 band boundary looks too low. Raised with Cassian.', entered: st('hera', '2026-10-29T14:10') };
+  });
+
+  const intel = by('w-analyst');
+  intel.testPlan = suggestPlan(intel, SEED_MODULES, SEED_WORKFLOWS);
+  intel.testPlan.created = st('jyn', '2026-10-12T11:30');
+  intel.testPlan.modified = st('jyn', '2026-10-13T10:50');
+  intel.testPlan.suites.forEach((suite, si) => suite.cases.forEach((c, ci) => {
+    c.created = st('jyn', '2026-10-12T11:30');
+    c.link = `https://assess.onlineassessments.app/t/${intel.code}-TC${si + 1}.${ci + 1}`;
+    c.linkCreated = st('jyn', '2026-10-12T13:00');
+    c.result = {
+      tester: ['Jyn Erso', 'Cassian Andor', 'Bodhi Rook'][(si + ci) % 3],
+      outcome: si === 1 && ci === 0 ? 'retest' : 'pass',
+      notes: si === 1 && ci === 0 ? 'Failed first: the warning didn’t show on the first tab switch. Passed on re-test after the fix.' : 'Worked as expected.',
+      entered: st('jyn', '2026-10-13T10:50'),
+    };
+  }));
+}
+seedPlans();

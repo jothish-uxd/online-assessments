@@ -140,6 +140,7 @@ export interface Workflow {
   settings: WorkflowSettings;
   scoring: Scoring;
   misbehavior: Misbehavior;
+  testPlan: TestPlan | null;
   created: Stamp;
   edited: Stamp;
   history: Activity[];
@@ -210,3 +211,32 @@ export interface Misbehavior {
   browser: Record<string, Detection>;
   review: { threshold: number; holdResults: boolean };
 }
+
+/* ---------- Test plan ---------- */
+
+export type CaseOutcome = 'pass' | 'fail' | 'retest' | 'not-tested';
+export type TestStatus = 'not-started' | 'in-progress' | 'passed' | 'failed';
+
+export interface TestCase {
+  id: string;
+  title: string;
+  summary: string;
+  /** Workflow version the link was (or will be) generated for */
+  version: number;
+  candidateId: string;
+  country: string;
+  jobCode: string;
+  jobFamily: string;
+  jobLevel: string;
+  jobClass: string;
+  instructions: string[];
+  expected: string;
+  link?: string;
+  linkCreated?: Stamp;
+  result: { tester: string; outcome: CaseOutcome; notes: string; entered?: Stamp };
+  created: Stamp;
+}
+
+export interface TestSuite { id: string; reason: string; description: string; cases: TestCase[]; created: Stamp }
+
+export interface TestPlan { name: string; description: string; created: Stamp; modified?: Stamp; suites: TestSuite[] }

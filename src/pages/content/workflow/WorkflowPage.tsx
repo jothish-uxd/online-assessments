@@ -14,6 +14,8 @@ import { contentRoutes, type WorkflowTab } from '../routes';
 import BuilderGraph from './BuilderGraph';
 import CompositeScores from './scores/CompositeScores';
 import Misbehavior from './Misbehavior';
+import TestPlanTab from './test/TestPlanTab';
+import { rollUp } from '../../../data/content/testplan';
 
 const TABS: { id: WorkflowTab; label: string }[] = [
   { id: 'builder', label: 'Builder graph' },
@@ -63,13 +65,19 @@ function Editor({ w }: { w: Workflow }) {
   const si = stageIndex(w.stage);
   const editable = w.stage === 'build';
   const next = NEXT[w.stage];
-  const blocked = w.stage === 'build' && (w.dirty || issues.length > 0);
+  // End-to-end testing passes only when every case in the test plan has passed.
+  const testsDone = !!w.testPlan && rollUp(w.testPlan.suites.flatMap((x) => x.cases)) === 'complete';
+  const blocked = (w.stage === 'build' && (w.dirty || issues.length > 0)) || (w.stage === 'e2e' && !testsDone);
   const status = w.stage === 'build'
     ? `Draft · ${issues.length ? 'unvalidated' : 'validated'}`
     : STAGES[si].label;
 
   const advance = () => {
-    if (!next || blocked) { if (blocked) setShowIssues(true); return; }
+    if (!next || blocked) {
+      if (blocked && w.stage === 'e2e') { setSaid(w.testPlan ? 'Every test case has to pass first. Open the Test plan tab.' : 'Create and complete a test plan first.'); return; }
+      if (blocked) setShowIssues(true);
+      return;
+    }
     setStage(w.id, next.to, next.action);
     setSaid(`${next.action}. Now in ${STAGES[stageIndex(next.to)].label}.`);
   };
@@ -122,7 +130,8 @@ function Editor({ w }: { w: Workflow }) {
         </div>
         {blocked && (
           <p id={`${id}-why`} className="visually-hidden">
-            {w.dirty ? 'Save your changes first.' : `Fix ${issues.length} validation issue${issues.length === 1 ? '' : 's'} first.`}
+            {w.stage === 'e2e' ? (w.testPlan ? 'Every test case in the test plan has to pass first.' : 'Create a test plan and pass every case first.')
+              : w.dirty ? 'Save your changes first.' : `Fix ${issues.length} validation issue${issues.length === 1 ? '' : 's'} first.`}
           </p>
         )}
 
@@ -177,19 +186,7 @@ function Editor({ w }: { w: Workflow }) {
       )}
       {tab === 'scores' && <CompositeScores w={w} editable={editable} />}
       {tab === 'misbehavior' && <Misbehavior w={w} editable={editable} />}
-      {tab === 'test-plan' && (
-        <section className="wf-section">
-          <h2 className="section-title">{TABS.find((t) => t.id === tab)!.label}</h2>
-          <div className="soon soon--inline">
-            <div className="soon__body">
-              <p className="page-kicker">Coming soon</p>
-              <p className="page-lede">
-                {tab === 'test-plan' && 'Candidate response scenarios (all correct, all wrong, mixed and boundary cases) and their expected outcomes.'}
-              </p>
-            </div>
-          </div>
-        </section>
-      )}
+      {tab === 'test-plan' && <TestPlanTab w={w} />}
 
       <span className="visually-hidden" role="status" aria-live="polite">{said}</span>
 

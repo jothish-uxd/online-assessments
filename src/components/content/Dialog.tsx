@@ -12,7 +12,7 @@ interface Props {
   description?: ReactNode;
   children?: ReactNode;
   footer?: ReactNode;
-  size?: 'sm' | 'lg';
+  size?: 'sm' | 'lg' | 'drawer';
   /** alertdialog for confirms that destroy something */
   alert?: boolean;
 }

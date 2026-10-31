@@ -15,6 +15,7 @@ import { BASE, contentRoutes } from './routes';
 import '../../styles/content.css';
 import '../../styles/scores.css';
 import '../../styles/misbehavior.css';
+import '../../styles/testplan.css';
 
 
 /** Assessment content: one app in its own frame, sectioned by horizontal tabs. */

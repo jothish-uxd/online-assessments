@@ -1,12 +1,12 @@
 import { peek, put, useStored } from '../store';
 import { now } from './store';
 import { SEED_WORKFLOWS } from './seedWorkflows';
-import type { Activity, Misbehavior, Module, Score, Stage, Step, Variation, Workflow, WorkflowSettings } from './types';
+import type { Activity, Misbehavior, Module, TestCase, TestPlan, TestSuite, Score, Stage, Step, Variation, Workflow, WorkflowSettings } from './types';
 import { checkR, checkScratch, inputsFor, outputsOf } from './scoring';
 import { NO_VIDEO_DEVICES, defaultMisbehavior } from './misbehavior';
 
-// v4: workflows gained composite scores and misbehavior settings.
-const KEY = 'content:v4:workflows';
+// v5: workflows gained composite scores, misbehavior settings and test plans.
+const KEY = 'content:v5:workflows';
 const all = () => peek<Workflow[]>(KEY) ?? SEED_WORKFLOWS;
 export const useWorkflows = () => useStored<Workflow[]>(KEY, () => SEED_WORKFLOWS)[0];
 
@@ -53,6 +53,7 @@ export function createWorkflow(name: string): Workflow {
     id: uid('w'), name: name.trim(), code, type: 'Candidate', stage: 'build', version: 1, dirty: true, steps: [],
     scoring: { variations: [], scores: [] },
     misbehavior: defaultMisbehavior(),
+    testPlan: null,
     settings: { ...SEED_WORKFLOWS[0].settings, ats: [], devices: ['desktop'], equivalent: [],
       reviewers: { ops: [], program: [], e2e: null, signoff: [], launch: null } },
     created: stamp, edited: stamp, history: [{ ...stamp, action: 'Created the workflow' }],
@@ -104,6 +105,37 @@ export function removeStep(id: string, stepId: string, label: string) {
     }
     return { ...w, steps };
   }, `Removed ${label}`);
+}
+
+/* ---------- Test plan: testing doesn't change the workflow, so it never marks it unsaved ---------- */
+
+function patchPlan(id: string, fn: (p: TestPlan) => TestPlan, action: string) {
+  patch(id, (w) => (w.testPlan ? { ...w, testPlan: { ...fn(w.testPlan), modified: { by: now().by, at: now().at } } } : w), action, false);
+}
+export function createTestPlan(id: string, plan: TestPlan) {
+  patch(id, (w) => ({ ...w, testPlan: plan }), 'Created the test plan', false);
+}
+export function addSuite(id: string, suite: TestSuite) {
+  patchPlan(id, (p) => ({ ...p, suites: [...p.suites, suite] }), `Added test suite: ${suite.reason}`);
+}
+export function deleteSuite(id: string, suiteId: string, reason: string) {
+  patchPlan(id, (p) => ({ ...p, suites: p.suites.filter((s) => s.id !== suiteId) }), `Deleted test suite: ${reason}`);
+}
+function patchCases(id: string, suiteId: string, fn: (cs: TestCase[]) => TestCase[], action: string) {
+  patchPlan(id, (p) => ({ ...p, suites: p.suites.map((s) => (s.id === suiteId ? { ...s, cases: fn(s.cases) } : s)) }), action);
+}
+export function addCase(id: string, suiteId: string, c: TestCase, after?: string) {
+  patchCases(id, suiteId, (cs) => {
+    if (!after) return [...cs, c];
+    const i = cs.findIndex((x) => x.id === after);
+    return [...cs.slice(0, i + 1), c, ...cs.slice(i + 1)];
+  }, `Added test case: ${c.title}`);
+}
+export function updateCase(id: string, suiteId: string, c: TestCase, action: string) {
+  patchCases(id, suiteId, (cs) => cs.map((x) => (x.id === c.id ? c : x)), action);
+}
+export function deleteCase(id: string, suiteId: string, caseId: string, title: string) {
+  patchCases(id, suiteId, (cs) => cs.filter((x) => x.id !== caseId), `Deleted test case: ${title}`);
 }
 
 /* ---------- Misbehavior settings ---------- */

@@ -3,7 +3,7 @@ import { st } from './seedAssets';
 
 /* Variation metadata: who a variation applies to. */
 export const VARIATION_CATEGORIES: { value: VariationCategory; label: string; values: string[] }[] = [
-  { value: 'country', label: 'Home system', values: ['Chandrila', 'Corellia', 'Naboo', 'Mon Cala', 'Lothal', 'Bespin', 'Dantooine', 'Jakku'] },
+  { value: 'country', label: 'Home system', values: ['Chandrila', 'Corellia', 'Naboo', 'Mon Cala', 'Lothal', 'Bespin', 'Dantooine', 'Jakku', 'Tatooine', 'Kashyyyk'] },
   { value: 'region', label: 'Region', values: ['Core Worlds', 'Colonies', 'Mid Rim', 'Outer Rim', 'Unknown Regions'] },
   { value: 'job-level', label: 'Job level', values: ['L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7'] },
   { value: 'language', label: 'Language', values: ['Galactic Basic', 'Shyriiwook', 'Mon Calamarian', 'Huttese', 'Binary'] },
