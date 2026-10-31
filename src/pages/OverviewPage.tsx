@@ -48,7 +48,7 @@ export default function OverviewPage() {
                 <span className="app-card__host">{a.host}</span>
                 <strong className="app-card__name">{a.name}</strong>
                 <span className="app-card__desc">{a.summary}</span>
-                <span className="tag">Coming soon</span>
+                <span className="tag">{a.status === 'in-progress' ? 'In progress' : 'Coming soon'}</span>
               </Link>
             </li>
           ))}

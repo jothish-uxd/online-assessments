@@ -7,7 +7,7 @@ A prototype of an online assessment platform for hiring, built on the same desig
 | Tab | What it is | Status |
 | --- | --- | --- |
 | Overview | The product story | Placeholder copy |
-| Assessment content | Writing and publishing assessments | Coming soon |
+| Assessment content | Assets library, question modules, and (next) assessments | Assets and Modules built |
 | Candidate website | Where candidates take assessments | Coming soon |
 | Hiring system | Sending assessments and reading results | Coming soon |
 | Proctoring report | Reviewing each session for integrity | Coming soon |

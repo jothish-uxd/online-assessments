@@ -3,6 +3,7 @@ import AppHeader from './components/AppHeader';
 import { usePageTitle } from './components/usePageTitle';
 import OverviewPage from './pages/OverviewPage';
 import ComingSoonApp from './pages/ComingSoonApp';
+import ContentApp from './pages/content/ContentApp';
 import { APPS } from './data/apps';
 
 export default function App() {
@@ -13,7 +14,8 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/overview" replace />} />
         <Route path="/overview" element={<OverviewPage />} />
-        {APPS.map((a) => (
+        <Route path="/assessment-content/*" element={<ContentApp />} />
+        {APPS.filter((a) => a.status === 'coming-soon').map((a) => (
           // key per app so each frame starts its own Back / Forward history
           <Route key={a.id} path={`${a.path}/*`} element={<ComingSoonApp key={a.id} id={a.id} />} />
         ))}

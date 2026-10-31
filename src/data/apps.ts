@@ -15,7 +15,7 @@ export interface AppInfo {
   /** Who uses it, one line */
   audience: string;
   summary: string;
-  status: 'coming-soon';
+  status: 'coming-soon' | 'in-progress';
 }
 
 export const APPS: AppInfo[] = [
@@ -24,9 +24,9 @@ export const APPS: AppInfo[] = [
     path: '/assessment-content',
     name: 'Assessment content',
     host: 'content.onlineassessments.app',
-    audience: 'Assessment authors',
-    summary: 'Where assessments and their questions are written, reviewed and published.',
-    status: 'coming-soon',
+    audience: 'Research scientists',
+    summary: 'Where scientists keep media assets, build reusable modules of questions, and assemble them into assessments.',
+    status: 'in-progress',
   },
   {
     id: 'candidate',
