@@ -127,7 +127,11 @@ export interface Module {
   created: Stamp;
   edited: Stamp;
   history: Activity[];
+  /** While a published module is being edited as a draft: the published version candidates still get. */
+  live?: LiveModule;
 }
+
+export type LiveModule = Pick<Module, 'name' | 'description' | 'items' | 'timing' | 'edited'>;
 
 /* ---------- OA workflows ---------- */
 

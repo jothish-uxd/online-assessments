@@ -116,19 +116,15 @@ export default function ItemEditor({ moduleId, item, readOnly, timing }: Props) 
       {(item.type === 'single' || item.type === 'multi') && (
         <fieldset className="choices">
           <legend className="field__label">Choices</legend>
-          <p className="field-help">{item.type === 'single' ? 'Select the one correct choice.' : 'Tick every correct choice.'}</p>
+          <p className="field-help">{item.type === 'single' ? 'Choose Mark correct on the right answer. Choosing another one moves it.' : 'Choose Mark correct on every right answer. Choose it again to unmark.'}</p>
           <ol className="choices__list">
             {choices.map((c, i) => (
               <li key={c.id} className={`choice${c.correct ? ' is-correct' : ''}`}>
-                <label className="choice__mark">
-                  <input type={item.type === 'single' ? 'radio' : 'checkbox'} name={`${id}-correct`} checked={c.correct}
-                    onChange={(e) => markCorrect(c.id, e.target.checked)} />
-                  <span className="visually-hidden">Choice {i + 1} is correct</span>
-                </label>
                 <span className="choice__letter" aria-hidden="true">{String.fromCharCode(65 + i)}</span>
                 <input className="choice__text" aria-label={`Choice ${i + 1}`} value={c.text} placeholder={`Choice ${i + 1}`}
                   onChange={(e) => setChoices(choices.map((x) => x.id === c.id ? { ...x, text: e.target.value } : x))} />
-                {c.correct && <span className="choice__flag">Correct</span>}
+                <CorrectToggle multi={item.type === 'multi'} name={`${id}-correct`} on={c.correct} what={c.text || `choice ${i + 1}`}
+                  onChange={(on) => markCorrect(c.id, on)} />
                 {!readOnly && (
                   <button type="button" className="bframe__btn" aria-label={`Remove choice ${i + 1}`} disabled={choices.length <= 2}
                     onClick={() => setChoices(choices.filter((x) => x.id !== c.id))}><CloseIcon /></button>
@@ -243,6 +239,22 @@ export default function ItemEditor({ moduleId, item, readOnly, timing }: Props) 
   );
 }
 
+/**
+ * The correct-answer control on a choice. A real radio (single select) or
+ * checkbox (multiple select), drawn as a pill that reads "Mark correct" or
+ * "Correct", so keyboard and screen reader behaviour stay native.
+ */
+function CorrectToggle({ multi, name, on, what, onChange }: { multi?: boolean; name: string; on: boolean; what: string; onChange: (on: boolean) => void }) {
+  return (
+    <label className={`correct-toggle${on ? ' is-on' : ''}`}>
+      <input type={multi ? 'checkbox' : 'radio'} name={name} checked={on} onChange={(e) => onChange(e.target.checked)}
+        aria-label={`${what} is correct`} />
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7" /></svg>
+      <span aria-hidden="true">{on ? 'Correct' : 'Mark correct'}</span>
+    </label>
+  );
+}
+
 /** One to three single-select questions about the chart. */
 function ChartQuestions({ id, questions, readOnly, onChange }: { id: string; questions: ChartQuestion[]; readOnly: boolean; onChange: (q: ChartQuestion[]) => void }) {
   const setQ = (qid: string, patch: Partial<ChartQuestion>) => onChange(questions.map((q) => q.id === qid ? { ...q, ...patch } : q));
@@ -251,7 +263,7 @@ function ChartQuestions({ id, questions, readOnly, onChange }: { id: string; que
     <section className="cq" aria-labelledby={`${id}-qh`}>
       <div className="cq__head">
         <h3 id={`${id}-qh`} className="field__label">Questions about the chart <span className="muted">({questions.length} of 3)</span></h3>
-        <p className="field-help">Each question is single select: candidates pick one answer. Mark the correct one.</p>
+        <p className="field-help">Each question is single select: candidates pick one answer. Choose Mark correct on the right one; choosing another moves it.</p>
       </div>
       <ol className="cq__list" id={`${id}-qs`}>
         {questions.map((q, qi) => (
@@ -266,15 +278,11 @@ function ChartQuestions({ id, questions, readOnly, onChange }: { id: string; que
               <ol className="choices__list">
                 {q.choices.map((c, i) => (
                   <li key={c.id} className={`choice${c.correct ? ' is-correct' : ''}`}>
-                    <label className="choice__mark">
-                      <input type="radio" name={`${id}-${q.id}-correct`} checked={c.correct}
-                        onChange={() => setQ(q.id, { choices: q.choices.map((x) => ({ ...x, correct: x.id === c.id })) })} />
-                      <span className="visually-hidden">Question {qi + 1}, choice {i + 1} is correct</span>
-                    </label>
                     <span className="choice__letter" aria-hidden="true">{String.fromCharCode(65 + i)}</span>
                     <input className="choice__text" aria-label={`Question ${qi + 1}, choice ${i + 1}`} value={c.text} placeholder={`Choice ${i + 1}`}
                       onChange={(e) => setQ(q.id, { choices: q.choices.map((x) => x.id === c.id ? { ...x, text: e.target.value } : x) })} />
-                    {c.correct && <span className="choice__flag">Correct</span>}
+                    <CorrectToggle name={`${id}-${q.id}-correct`} on={c.correct} what={c.text || `choice ${i + 1}`}
+                      onChange={() => setQ(q.id, { choices: q.choices.map((x) => ({ ...x, correct: x.id === c.id })) })} />
                     {!readOnly && (
                       <button type="button" className="bframe__btn" aria-label={`Remove question ${qi + 1}, choice ${i + 1}`} disabled={q.choices.length <= 2}
                         onClick={() => setQ(q.id, { choices: q.choices.filter((x) => x.id !== c.id) })}><CloseIcon /></button>

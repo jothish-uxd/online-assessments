@@ -125,6 +125,41 @@ function patchModule(id: string, fn: (m: Module) => Module, action?: string) {
   }));
 }
 
+/* ---------- Drafts of published modules ---------- */
+
+const liveOf = (m: Module) => ({ name: m.name, description: m.description, items: m.items, timing: m.timing, edited: m.edited });
+
+/** Start editing a published module. The published version stays live until a new one is published. */
+export function editAsDraft(id: string) {
+  patchModule(id, (m) => ({ ...m, status: 'draft', live: m.live ?? liveOf(m) }), 'Started a draft');
+}
+
+/** Whether the draft differs from the published version it was opened from. */
+export function draftChanged(m: Module) {
+  if (!m.live) return false;
+  const a = { name: m.name, description: m.description, items: m.items, timing: m.timing };
+  const b = { name: m.live.name, description: m.live.description, items: m.live.items, timing: m.live.timing };
+  return JSON.stringify(a) !== JSON.stringify(b);
+}
+
+/** Throw the draft away and go back to the published version. */
+export function discardDraft(id: string) {
+  put(MODULES, modules().map((m) => {
+    if (m.id !== id || !m.live) return m;
+    const { live, ...rest } = m;
+    return { ...rest, ...live, status: 'published' as const, history: addActivity(m.history, 'Discarded the draft') };
+  }));
+}
+
+/** Changes save as you type; this records a checkpoint so reviewers see when the draft was last saved on purpose. */
+export function saveDraft(id: string) {
+  patchModule(id, (m) => m, 'Saved the draft');
+}
+
+export function publishModule(id: string) {
+  patchModule(id, (m) => { const { live: _l, ...rest } = m; return { ...rest, status: 'published' }; }, 'Published');
+}
+
 /* ---------- Timing ---------- */
 
 export function setModuleTiming(id: string, timing: ModuleTiming) {

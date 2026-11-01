@@ -285,7 +285,7 @@ export function validate(w: Workflow, modules: Module[]): Issue[] {
     if (s.kind !== 'module') return;
     const m = mods[i];
     if (!m) out.push({ text: `Step ${i + 1} points to a module that was deleted.`, stepId: s.id });
-    else if (m.status !== 'published') out.push({ text: `“${m.name}” isn’t published yet.`, stepId: s.id });
+    else if (m.status !== 'published' && !m.live) out.push({ text: `“${m.name}” isn’t published yet.`, stepId: s.id });
   });
   const seen = new Set<string>();
   w.steps.forEach((s) => {

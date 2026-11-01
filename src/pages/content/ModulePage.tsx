@@ -7,7 +7,8 @@ import { ActivityList, Byline } from '../../components/content/Byline';
 import { AlertIcon, CheckIcon, CopyIcon, DownIcon, PlusIcon, TrashIcon, TypeIcon, UpIcon } from '../../components/content/icons';
 import {
   addItem, deleteItem, deleteModule, duplicateItem, duplicateModule, itemIssues, modulePoints,
-  moveItem, newItem, updateModule, useAssets, useModules, fmtSeconds, itemSeconds, moduleTime, setModuleTiming,
+  moveItem, newItem, updateModule, useAssets, useModules, fmtSeconds,
+  draftChanged, discardDraft, editAsDraft, publishModule, saveDraft, itemSeconds, moduleTime, setModuleTiming,
 } from '../../data/content/store';
 import { TimerIcon } from '../../components/content/icons';
 import { ITEM_TYPES, allowedIn, purposeLabel, typeInfo } from '../../data/content/itemTypes';
@@ -49,6 +50,8 @@ function ModuleView({ m }: { m: Module }) {
   const [deleting, setDeleting] = useState<Item | null>(null);
   const [deletingModule, setDeletingModule] = useState(false);
   const [said, setSaid] = useState('');
+  const [savedNote, setSavedNote] = useState('');
+  const [discarding, setDiscarding] = useState(false);
 
   const readOnly = m.status === 'published';
   const notReady = m.items.filter((i) => itemIssues(i).length);
@@ -81,6 +84,14 @@ function ModuleView({ m }: { m: Module }) {
     updateModule(m.id, { status }, action);
     setSaid(note);
   };
+  const changed = draftChanged(m);
+  const doDiscard = () => {
+    discardDraft(m.id);
+    setDiscarding(false);
+    setSavedNote('');
+    setSaid(changed ? 'Draft discarded. Back to the published version.' : 'Stopped editing. Back to the published version.');
+  };
+  const timeFmt = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' });
 
   return (
     <div className="ca-page module">
@@ -100,27 +111,46 @@ function ModuleView({ m }: { m: Module }) {
         <div className="ca-head__actions">
           <StatusBadge status={m.status} />
           {m.status === 'draft' && (
-            <button type="button" className="btn btn--primary" aria-disabled={!canSubmit} aria-describedby={!canSubmit ? `${id}-why` : undefined}
-              onClick={() => canSubmit && setStatus('in-review', 'Sent for review', 'Sent for review.')}>Send for review</button>
+            <>
+              {savedNote && <span className="save-state">{savedNote}</span>}
+              {m.live && (
+                <button type="button" className="btn btn--secondary" onClick={() => changed ? setDiscarding(true) : doDiscard()}>
+                  {changed ? 'Discard draft' : 'Cancel editing'}
+                </button>
+              )}
+              <button type="button" className="btn btn--secondary"
+                onClick={() => { saveDraft(m.id); const t = `Draft saved ${timeFmt.format(new Date())}`; setSavedNote(t); setSaid(`${t}.`); }}>Save draft</button>
+              <button type="button" className="btn btn--primary" aria-disabled={!canSubmit || (!!m.live && !changed)} aria-describedby={!canSubmit ? `${id}-why` : m.live && !changed ? `${id}-same` : undefined}
+                onClick={() => canSubmit && (!m.live || changed) && setStatus('in-review', 'Sent for review', 'Sent for review.')}>Send for review</button>
+            </>
           )}
           {m.status === 'in-review' && (
             <>
               <button type="button" className="btn btn--secondary" onClick={() => setStatus('draft', 'Moved back to draft', 'Moved back to draft.')}>Back to draft</button>
               <button type="button" className="btn btn--primary" aria-disabled={!canSubmit} aria-describedby={!canSubmit ? `${id}-why` : undefined}
-                onClick={() => canSubmit && setStatus('published', 'Published', 'Published. Assessments can now use this module.')}>Publish</button>
+                onClick={() => { if (canSubmit) { publishModule(m.id); setSaid('Published. Assessments can now use this module.'); } }}>Publish</button>
             </>
           )}
           {m.status === 'published' && (
-            <button type="button" className="btn btn--secondary" onClick={() => setStatus('draft', 'Reopened as a draft', 'Reopened as a draft. You can edit it now.')}>Edit as draft</button>
+            <button type="button" className="btn btn--secondary" onClick={() => { editAsDraft(m.id); setSavedNote(''); setSaid('Editing a draft. Candidates still get the published version.'); }}>Edit as draft</button>
           )}
         </div>
       </header>
+      {m.live && m.status !== 'published' && (
+        <div className="draft-bar" role="note">
+          <strong>{m.status === 'in-review' ? 'Draft in review.' : 'Editing a draft of a published module.'}</strong>{' '}
+          Candidates still get the version published <Byline stamp={m.live.edited} time /> until this one is published.
+          {m.status === 'draft' && (changed
+            ? <> Changes save as you type; <em>Discard draft</em> goes back to the published version.</>
+            : <span id={`${id}-same`}> No changes yet. Make one before sending for review, or choose <em>Cancel editing</em>.</span>)}
+        </div>
+      )}
       {!canSubmit && m.status !== 'published' && (
         <p id={`${id}-why`} className="gap-text small module__why">
           <AlertIcon /> {m.items.length === 0 ? 'Add at least one item first.' : notReady.length === 1 ? `Item ${m.items.indexOf(notReady[0]) + 1} isn’t ready yet.` : `Items ${notReady.map((i) => m.items.indexOf(i) + 1).join(', ')} aren’t ready yet.`}
         </p>
       )}
-      {readOnly && <p className="readonly-note">Published modules can’t be changed. Choose <strong>Edit as draft</strong> to make changes; it will need review again.</p>}
+      {readOnly && <p className="readonly-note">Published modules can’t be changed. Choose <strong>Edit as draft</strong> to make changes. Candidates keep getting this version until the draft is reviewed and published.</p>}
 
       <div className="module__grid">
         <section aria-labelledby={`${id}-items`}>
@@ -221,6 +251,18 @@ function ModuleView({ m }: { m: Module }) {
       </div>
 
       <span className="visually-hidden" role="status" aria-live="polite">{said}</span>
+
+      <Dialog
+        open={discarding}
+        onClose={() => setDiscarding(false)}
+        alert
+        title="Discard this draft?"
+        description={<p>Your changes since {m.live ? <Byline stamp={m.live.edited} time /> : 'publishing'} are thrown away and the module goes back to the published version. This can’t be undone.</p>}
+        footer={<>
+          <button type="button" className="btn btn--secondary" onClick={() => setDiscarding(false)} autoFocus>Keep editing</button>
+          <button type="button" className="btn btn--danger" onClick={doDiscard}>Discard draft</button>
+        </>}
+      />
 
       <Dialog
         open={adding}
