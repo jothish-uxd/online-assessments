@@ -35,15 +35,22 @@ export function when(iso: string, time = false) {
   return time ? `${dayFmt.format(d)}, ${timeFmt.format(d)}` : dayFmt.format(d);
 }
 
-export const KIND_LABEL: Record<Asset['kind'], string> = { image: 'Image', video: 'Video', audio: 'Audio', document: 'Document' };
+export const KIND_LABEL: Record<Asset['kind'], string> = { image: 'Image', video: 'Video', audio: 'Audio', document: 'Document', chart: 'Chart' };
 
 /** One-line spec: "2400 × 1600 · 2.3 MB" or "2:14 · 3.1 MB" */
 export function spec(a: Asset) {
   const parts: string[] = [];
+  if (a.kind === 'chart' && a.chart) {
+    const c = a.chart;
+    const n = c.type === 'scatter' ? `${c.points?.length ?? 0} points` : c.type === 'line' ? `${c.series.length} lines` : c.type === 'donut' ? `${c.categories.length} parts` : `${c.categories.length} bars`;
+    return `${CHART_NOUN[c.type]} · ${n}`;
+  }
   if (a.kind === 'image' && a.width) parts.push(`${a.width} × ${a.height}`);
   if (a.duration !== undefined) parts.push(duration(a.duration));
   parts.push(bytes(a.size));
   return parts.join(' · ');
 }
+
+export const CHART_NOUN = { vbar: 'Vertical bars', hbar: 'Horizontal bars', stacked: 'Segmented bars', donut: 'Donut', line: 'Multi-line', scatter: 'Scatter plot' } as const;
 
 export const ext = (name: string) => (name.match(/\.([^.]+)$/)?.[1] ?? '').toUpperCase();

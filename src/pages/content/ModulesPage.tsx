@@ -5,7 +5,7 @@ import Select from '../../components/Select';
 import Dialog from '../../components/content/Dialog';
 import { Byline } from '../../components/content/Byline';
 import { AlertIcon, PlusIcon, SearchIcon } from '../../components/content/icons';
-import { createModule, moduleIssues, modulePoints, useModules } from '../../data/content/store';
+import { createModule, fmtSeconds, moduleIssues, modulePoints, moduleTime, useModules } from '../../data/content/store';
 import type { ModuleKind, ModuleStatus } from '../../data/content/types';
 import { contentRoutes } from './routes';
 import { KIND_TEXT, StatusBadge } from './moduleBits';
@@ -98,6 +98,7 @@ export default function ModulesPage() {
                 <th scope="col">Kind</th>
                 <th scope="col" className="num">Items</th>
                 <th scope="col" className="num">Points</th>
+                <th scope="col">Item timer</th>
                 <th scope="col">Status</th>
                 <th scope="col">Created</th>
                 <th scope="col">Last edited</th>
@@ -116,6 +117,8 @@ export default function ModulesPage() {
                     <td>{KIND_TEXT[m.kind]}</td>
                     <td className="num">{m.items.length}</td>
                     <td className="num">{m.kind === 'evaluative' ? modulePoints(m) : <span className="muted">—</span>}</td>
+                    <td>{m.kind !== 'evaluative' || m.timing.mode === 'off' ? <span className="muted">{m.kind === 'evaluative' ? 'Off' : '—'}</span>
+                      : <>{m.timing.mode === 'each' ? `${fmtSeconds(m.timing.seconds)} each` : 'Per item'}<span className="cell-sub">{fmtSeconds(moduleTime(m).seconds)} total</span></>}</td>
                     <td><StatusBadge status={m.status} /></td>
                     <td><Byline stamp={m.created} stacked /></td>
                     <td><Byline stamp={m.edited} stacked /></td>

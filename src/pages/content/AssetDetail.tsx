@@ -10,6 +10,8 @@ import { deleteAssets, updateAsset, useModules, usesOf } from '../../data/conten
 import { KIND_LABEL, bytes, duration, durationLong } from '../../data/content/format';
 import type { Asset } from '../../data/content/types';
 import { contentRoutes } from './routes';
+import Chart from '../../components/content/Chart';
+import { CHART_NOUN } from '../../data/content/format';
 
 type Fields = Pick<Asset, 'title' | 'alt' | 'caption' | 'transcript' | 'tags'>;
 const pickFields = (a: Asset): Fields => ({ title: a.title, alt: a.alt, caption: a.caption, transcript: a.transcript, tags: a.tags });
@@ -47,6 +49,9 @@ export default function AssetDetail({ asset, onClose }: { asset: Asset; onClose:
       </div>
 
       <div className="detail__scroll">
+        {asset.kind === 'chart' && asset.chart ? (
+          <div className="preview preview--chart"><Chart spec={asset.chart} title={fields.title || asset.title} /></div>
+        ) : (
         <figure className={`preview preview--${asset.kind}`}>
           {asset.kind === 'image' && (url ? <img src={url} alt={asset.alt} /> : <SceneArt id={asset.id} />)}
           {asset.kind === 'video' && (url
@@ -66,6 +71,7 @@ export default function AssetDetail({ asset, onClose }: { asset: Asset; onClose:
             </>
           )}
         </figure>
+        )}
 
         <form className="form detail__form" onSubmit={(e) => { e.preventDefault(); save(); }}>
           <div className="field">
@@ -84,6 +90,13 @@ export default function AssetDetail({ asset, onClose }: { asset: Asset; onClose:
                   ? 'Read to candidates who use a screen reader. Describe what matters for the item.'
                   : <span className="gap-text"><AlertIcon /> Needed before a candidate who can’t see the image can answer.</span>}
               </span>
+            </div>
+          )}
+
+          {asset.kind === 'chart' && asset.chart && (
+            <div className="field">
+              <span className="field__label">Summary for screen readers</span>
+              <p className="field-help chart-summary-note">Shown under the chart and read out with it. It’s written from the data, so it stays in step when the numbers change. Candidates can also open the data table.</p>
             </div>
           )}
 
@@ -117,7 +130,16 @@ export default function AssetDetail({ asset, onClose }: { asset: Asset; onClose:
         </form>
 
         <section className="detail__section" aria-labelledby={`${id}-file`}>
-          <h3 id={`${id}-file`} className="detail__h3">File</h3>
+          <h3 id={`${id}-file`} className="detail__h3">{asset.kind === 'chart' ? 'Chart' : 'File'}</h3>
+          {asset.kind === 'chart' && asset.chart ? (
+          <dl className="kv">
+            <div><dt>Type</dt><dd>{CHART_NOUN[asset.chart.type]}</dd></div>
+            <div><dt>Data</dt><dd>{asset.chart.type === 'scatter' ? `${asset.chart.points?.length ?? 0} points` : `${asset.chart.categories.length} categories × ${asset.chart.series.length} series`}</dd></div>
+            {asset.chart.unit && <div><dt>Unit</dt><dd className="mono">{asset.chart.unit}</dd></div>}
+            <div><dt>Created</dt><dd><Byline stamp={asset.created} time /></dd></div>
+            <div><dt>Last edited</dt><dd><Byline stamp={asset.edited} time /></dd></div>
+          </dl>
+          ) : (
           <dl className="kv">
             <div><dt>File name</dt><dd className="mono">{asset.fileName}</dd></div>
             <div><dt>Type</dt><dd>{KIND_LABEL[asset.kind]} <span className="muted">· {asset.mime}</span></dd></div>
@@ -127,6 +149,7 @@ export default function AssetDetail({ asset, onClose }: { asset: Asset; onClose:
             <div><dt>Uploaded</dt><dd><Byline stamp={asset.created} time /></dd></div>
             <div><dt>Last edited</dt><dd><Byline stamp={asset.edited} time /></dd></div>
           </dl>
+          )}
         </section>
 
         <section className="detail__section" aria-labelledby={`${id}-used`}>

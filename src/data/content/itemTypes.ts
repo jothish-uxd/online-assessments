@@ -11,7 +11,7 @@ export interface ItemTypeInfo {
   /** Not designed yet: shown, but can't be added */
   later?: boolean;
   /** Media the item can show with its prompt */
-  media?: 'any' | 'audio';
+  media?: 'any' | 'audio' | 'chart';
 }
 
 export const ITEM_TYPES: ItemTypeInfo[] = [
@@ -25,6 +25,8 @@ export const ITEM_TYPES: ItemTypeInfo[] = [
     about: 'Candidates read content, then record an audio answer.' },
   { type: 'listen-write', label: 'Listen and write', short: 'Listen and write', scored: true, media: 'audio',
     about: 'Candidates play an audio clip, then write a response.' },
+  { type: 'chart', label: 'Chart interpretation', short: 'Chart', scored: true, media: 'chart',
+    about: 'Candidates read a chart, then answer one to three single-select questions about it.' },
   { type: 'content', label: 'Content block', short: 'Content', scored: false, media: 'any',
     about: 'Not scored: terms, privacy notices, consent and instructions.' },
   { type: 'inbox', label: 'Inbox simulation', short: 'Inbox', scored: true, later: true,

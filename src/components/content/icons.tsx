@@ -28,12 +28,16 @@ export const VideoIcon = () => <Svg><rect x="3.5" y="6" width="12.5" height="12"
 export const AudioIcon = () => <Svg><path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2" /></Svg>;
 export const DocIcon = () => <Svg><path d="M14 3H7a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V7z" /><path d="M14 3v4h4M9 12h6M9 16h4" /></Svg>;
 
+export const ChartIcon = () => <Svg><path d="M4 20V4M4 20h16" /><rect x="7" y="11" width="3" height="6" /><rect x="12" y="7" width="3" height="10" /><rect x="17" y="13" width="3" height="4" /></Svg>;
+export const TimerIcon = () => <Svg><circle cx="12" cy="13" r="7.5" /><path d="M12 9v4l2.5 2M10 3h4" /></Svg>;
+
 export function KindIcon({ kind }: { kind: AssetKind }) {
   switch (kind) {
     case 'image': return <ImageIcon />;
     case 'video': return <VideoIcon />;
     case 'audio': return <AudioIcon />;
     case 'document': return <DocIcon />;
+    case 'chart': return <ChartIcon />;
   }
 }
 
@@ -43,6 +47,7 @@ export function TypeIcon({ type }: { type: ItemType }) {
     case 'multi': return <Svg><rect x="4" y="4" width="16" height="16" rx="3" /><path d="m8 12.5 3 3 5-6" /></Svg>;
     case 'paragraph': return <Svg><path d="M4 6h16M4 10h16M4 14h16M4 18h9" /></Svg>;
     case 'spoken': return <Svg><rect x="9" y="3.5" width="6" height="11" rx="3" /><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3" /></Svg>;
+    case 'chart': return <ChartIcon />;
     case 'listen-write': return <Svg><path d="M4 14v-2a8 8 0 0 1 16 0v2" /><rect x="3.5" y="13" width="4" height="6.5" rx="1.5" /><rect x="16.5" y="13" width="4" height="6.5" rx="1.5" /></Svg>;
     case 'content': return <Svg><path d="M5 4.5h10l4 4V19.5H5z" /><path d="M8.5 11h7M8.5 14.5h7M8.5 8h3" /></Svg>;
     case 'inbox': return <Svg><path d="M3.5 13.5 6 5h12l2.5 8.5V19a1 1 0 0 1-1 1h-15a1 1 0 0 1-1-1z" /><path d="M3.5 13.5H8l1.5 2.5h5l1.5-2.5h4.5" /></Svg>;

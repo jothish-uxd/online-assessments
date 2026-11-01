@@ -133,6 +133,25 @@ export function suggestPlan(w: Workflow, _modules: Module[], workflows: Workflow
     ]));
   }
 
+  const tl = w.settings.timeLimit;
+  const timedMods = _modules.filter((m) => m.timing.mode !== 'off' && w.steps.some((s) => s.kind === 'module' && s.moduleId === m.id));
+  if (tl.on || timedMods.length) {
+    const most = tl.extraTime.length ? Math.max(...tl.extraTime) : 0;
+    suites.push(suite('Timing', 'Checks item timers and the assessment time limit behave as set, including extra time.', [
+      ...(tl.on ? [mk({ title: 'Time runs out', summary: `The ${tl.minutes} minute limit ends the assessment.`, candidateId: '246810',
+        instructions: ['Open the test link as the candidate', 'Answer the first module, then wait without answering', `Let the ${tl.minutes} minute clock run out`],
+        expected: tl.onExpire === 'submit'
+          ? 'A warning shows at 5 minutes and 1 minute left\nThe assessment submits the moment time runs out\nAnswers given so far are scored; the rest are marked unanswered'
+          : 'A warning shows at 5 minutes and 1 minute left\nThe candidate can finish the item on screen, then the assessment submits\nUnseen items are marked unanswered' }),
+      ...(most ? [mk({ title: `${most}× extra time`, summary: 'An approved accommodation stretches the limit and item timers.', candidateId: '112358',
+        instructions: [`Grant ${most}× extra time to the test candidate`, 'Open the test link as the candidate', 'Check the clock and an item timer'],
+        expected: `The limit shows ${Math.round(tl.minutes * most)} minutes\nItem timers are stretched by the same amount` })] : [])] : []),
+      ...(timedMods.length ? [mk({ title: 'Item timer expires', summary: `An item in ${timedMods[0].name} times out.`, candidateId: '789789',
+        instructions: [`Start ${timedMods[0].name}`, 'Leave the first item unanswered until its timer ends'],
+        expected: 'The timer is announced to screen readers at 30 and 10 seconds\nThe item moves on and is marked unanswered\nThe candidate can’t go back to it' })] : []),
+    ]));
+  }
+
   suites.push(suite('Candidate experience', 'Checks the assessment works for candidates using assistive technology and the supported devices.', [
     mk({ title: 'Keyboard and screen reader only', summary: 'The whole assessment can be completed without a mouse, with a screen reader on.', candidateId: '112358',
       instructions: ['Turn on VoiceOver (Mac: ⌘ F5)', 'Complete the assessment using only the keyboard', 'Note any item you can’t reach, hear or answer'],

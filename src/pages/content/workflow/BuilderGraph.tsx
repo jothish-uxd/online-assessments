@@ -2,7 +2,7 @@ import { useId, useState, type DragEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Menu from '../../../components/content/Menu';
 import { AlertIcon, PlusIcon } from '../../../components/content/icons';
-import { modulePoints, useModules } from '../../../data/content/store';
+import { fmtSeconds, modulePoints, moduleTime, useModules } from '../../../data/content/store';
 import { insertStep, moveStep, removeStep, type Issue } from '../../../data/content/workflows';
 import type { Module, Step, Workflow } from '../../../data/content/types';
 import { StatusBadge } from '../moduleBits';
@@ -168,7 +168,7 @@ export default function BuilderGraph({ w, editable, issues }: Props) {
                         {details && m && (
                           <span className="node__details">
                             <StatusBadge status={m.status} />
-                            <span>{m.items.length} item{m.items.length === 1 ? '' : 's'}{m.kind === 'evaluative' ? ` · ${modulePoints(m)} pts` : ''}</span>
+                            <span>{m.items.length} item{m.items.length === 1 ? '' : 's'}{m.kind === 'evaluative' ? ` · ${modulePoints(m)} pts` : ''}{m.timing.mode !== 'off' ? ` · ${fmtSeconds(moduleTime(m).seconds)} timed` : ''}</span>
                           </span>
                         )}
                       </span>

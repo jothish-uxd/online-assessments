@@ -3,7 +3,7 @@ import { SEED_ASSETS } from './seedAssets';
 import { SEED_MODULES } from './seedModules';
 import { ME } from './people';
 import { typeInfo } from './itemTypes';
-import type { Activity, Asset, AssetKind, Item, ItemType, Module, Stamp } from './types';
+import type { Activity, Asset, AssetKind, ChartQuestion, ChartSpec, Item, ItemType, Module, ModuleTiming, Stamp } from './types';
 import { clearFiles, deleteFile, probe, saveFile } from './blobs';
 
 /*
@@ -12,8 +12,9 @@ import { clearFiles, deleteFile, probe, saveFile } from './blobs';
 */
 
 // v2: the larger Star Wars sample set. Older saved edits are left behind.
-const ASSETS = 'content:v2:assets';
-const MODULES = 'content:v2:modules';
+// v3: chart assets, chart items and module timing.
+const ASSETS = 'content:v3:assets';
+const MODULES = 'content:v3:modules';
 
 export const now = (): Stamp => ({ by: ME, at: new Date().toISOString() });
 const uid = (p: string) => `${p}-${Math.random().toString(36).slice(2, 9)}`;
@@ -109,7 +110,7 @@ export function usesOf(assetId: string, list: Module[]) {
 export function createModule(fields: Pick<Module, 'name' | 'description' | 'kind'>): Module {
   const stamp = now();
   const m: Module = {
-    id: uid('m'), ...fields, status: 'draft', items: [],
+    id: uid('m'), ...fields, status: 'draft', items: [], timing: { mode: 'off', seconds: 60 },
     created: stamp, edited: stamp, history: [{ ...stamp, action: 'Created the module' }],
   };
   put(MODULES, [m, ...modules()]);
@@ -122,6 +123,48 @@ function patchModule(id: string, fn: (m: Module) => Module, action?: string) {
     const next = fn(m);
     return { ...next, edited: now(), history: action ? addActivity(next.history, action) : next.history };
   }));
+}
+
+/* ---------- Timing ---------- */
+
+export function setModuleTiming(id: string, timing: ModuleTiming) {
+  const text = timing.mode === 'off' ? 'Turned off item timing'
+    : timing.mode === 'each' ? `Timed every item at ${fmtSeconds(timing.seconds)}` : 'Set time limits item by item';
+  patchModule(id, (m) => ({ ...m, timing }), text);
+}
+
+/** "90 s", "2 min", "2 min 30 s" */
+export function fmtSeconds(sec: number) {
+  if (sec < 60) return `${sec} s`;
+  const m = Math.floor(sec / 60); const s = sec % 60;
+  return s ? `${m} min ${s} s` : `${m} min`;
+}
+
+/** Seconds an item is allowed, or null if it isn't timed. Content blocks are never timed. */
+export function itemSeconds(m: Module, i: Item): number | null {
+  if (!typeInfo(i.type).scored || m.timing.mode === 'off') return null;
+  if (m.timing.mode === 'each') return m.timing.seconds;
+  return i.settings.timeSeconds ?? null;
+}
+/** Total timed seconds in a module, and how many scored items are untimed. */
+export function moduleTime(m: Module) {
+  const scored = m.items.filter((i) => typeInfo(i.type).scored);
+  const secs = scored.map((i) => itemSeconds(m, i));
+  return { seconds: secs.reduce<number>((s, x) => s + (x ?? 0), 0), untimed: secs.filter((x) => x === null).length, scored: scored.length };
+}
+
+/* ---------- Charts ---------- */
+
+export function createChart(fields: { title: string; chart: ChartSpec; alt: string; tags: string[] }): Asset {
+  const stamp = now();
+  const json = JSON.stringify(fields.chart);
+  const a: Asset = {
+    id: uid('a'), kind: 'chart', title: fields.title, fileName: `${fields.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}.chart.json`,
+    mime: 'application/json', size: json.length, alt: fields.alt, caption: '', transcript: '', tags: fields.tags,
+    chart: fields.chart, created: stamp, edited: stamp, history: [{ ...stamp, action: 'Created the chart' }], hasFile: false,
+  };
+  put(ASSETS, [a, ...assets()]);
+  return a;
 }
 
 export function updateModule(id: string, patch: Partial<Pick<Module, 'name' | 'description' | 'status'>>, action = 'Edited details') {
@@ -138,12 +181,18 @@ export function duplicateModule(id: string): Module | undefined {
   const stamp = now();
   const copy: Module = {
     ...src, id: uid('m'), name: `${src.name} (copy)`, status: 'draft',
-    items: src.items.map((i) => ({ ...i, id: uid('i'), choices: i.choices?.map((c) => ({ ...c, id: uid('c') })), created: stamp, edited: stamp })),
+    items: src.items.map((i) => ({ ...i, id: uid('i'), choices: i.choices?.map((c) => ({ ...c, id: uid('c') })), questions: copyQuestions(i.questions), created: stamp, edited: stamp })),
     created: stamp, edited: stamp, history: [{ ...stamp, action: `Duplicated from “${src.name}”` }],
   };
   put(MODULES, [copy, ...modules()]);
   return copy;
 }
+
+export const newQuestion = (): ChartQuestion => ({
+  id: uid('q'), prompt: '', points: 1,
+  choices: [{ id: uid('c'), text: '', correct: false }, { id: uid('c'), text: '', correct: false }, { id: uid('c'), text: '', correct: false }],
+});
+const copyQuestions = (qs?: ChartQuestion[]) => qs?.map((q) => ({ ...q, id: uid('q'), choices: q.choices.map((c) => ({ ...c, id: uid('c') })) }));
 
 export function newItem(type: ItemType): Item {
   const stamp = now();
@@ -157,9 +206,11 @@ export function newItem(type: ItemType): Item {
     : type === 'spoken' ? { prepSeconds: 30, maxSeconds: 120, attempts: 1, guidance: '' }
     : type === 'listen-write' ? { plays: 2, maxWords: 200, guidance: '' }
     : type === 'content' ? { purpose: 'instructions', requireAck: false, ackLabel: 'I understand' }
+    : type === 'chart' ? { shuffle: true }
     : {};
   return {
-    id: uid('i'), type, prompt: '', title: type === 'content' ? '' : undefined, choices,
+    id: uid('i'), type, prompt: type === 'chart' ? 'Use the chart to answer the questions.' : '', title: type === 'content' ? '' : undefined, choices,
+    questions: type === 'chart' ? [newQuestion()] : undefined,
     points: typeInfo(type).scored ? 1 : 0, required: true, settings, created: stamp, edited: stamp,
   };
 }
@@ -170,7 +221,13 @@ export function addItem(moduleId: string, item: Item) {
 
 export function updateItem(moduleId: string, itemId: string, patch: Partial<Item>) {
   patchModule(moduleId, (m) => ({
-    ...m, items: m.items.map((i) => i.id === itemId ? { ...i, ...patch, edited: now() } : i),
+    ...m, items: m.items.map((i) => {
+      if (i.id !== itemId) return i;
+      const next = { ...i, ...patch, edited: now() };
+      // A chart item is worth the sum of its questions.
+      if (next.questions) next.points = next.questions.reduce((s, q) => s + (q.points || 0), 0);
+      return next;
+    }),
   }), `Edited item ${(modules().find((m) => m.id === moduleId)?.items.findIndex((i) => i.id === itemId) ?? 0) + 1}`);
 }
 
@@ -191,7 +248,7 @@ export function duplicateItem(moduleId: string, itemId: string): Item | undefine
   if (!m || i < 0) return;
   const stamp = now();
   const src = m.items[i];
-  const copy: Item = { ...src, id: uid('i'), choices: src.choices?.map((c) => ({ ...c, id: uid('c') })), created: stamp, edited: stamp };
+  const copy: Item = { ...src, id: uid('i'), choices: src.choices?.map((c) => ({ ...c, id: uid('c') })), questions: copyQuestions(src.questions), created: stamp, edited: stamp };
   patchModule(moduleId, (x) => ({ ...x, items: [...x.items.slice(0, i + 1), copy, ...x.items.slice(i + 1)] }), `Duplicated item ${i + 1}`);
   return copy;
 }
@@ -222,6 +279,19 @@ export function itemIssues(item: Item): string[] {
     if (item.type === 'multi' && correct.length < 1) out.push('Mark at least one correct choice.');
   }
   if (item.type === 'listen-write' && !item.assetId) out.push('Attach the audio candidates listen to.');
+  if (item.type === 'chart') {
+    const qs = item.questions ?? [];
+    if (!item.assetId) out.push('Choose the chart candidates read.');
+    if (!qs.length) out.push('Add at least one question.');
+    if (qs.length > 3) out.push('A chart can have up to three questions.');
+    qs.forEach((q, i) => {
+      const at = `Question ${i + 1}`;
+      if (!q.prompt.trim()) out.push(`${at}: add the question.`);
+      if (q.choices.some((c) => !c.text.trim())) out.push(`${at}: fill in or remove empty choices.`);
+      if (q.choices.length < 2) out.push(`${at}: add at least two choices.`);
+      if (q.choices.filter((c) => c.correct).length !== 1) out.push(`${at}: mark the one correct choice.`);
+    });
+  }
   if (info.scored && item.points <= 0) out.push('Give it at least 1 point.');
   if (item.settings.minWords && item.settings.maxWords && item.settings.minWords > item.settings.maxWords) out.push('Minimum words is more than the maximum.');
   return out;
@@ -233,6 +303,7 @@ export const modulePoints = (m: Module) => m.items.reduce((s, i) => s + (typeInf
 /** Assets missing the text people using assistive tech need. */
 export function a11yGap(a: Asset): string | null {
   if (a.kind === 'image' && !a.alt.trim()) return 'No alt text';
+  if (a.kind === 'chart' && !a.chart) return 'No data';
   if ((a.kind === 'audio' || a.kind === 'video') && !a.transcript.trim()) return 'No transcript';
   return null;
 }

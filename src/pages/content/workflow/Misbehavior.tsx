@@ -337,6 +337,7 @@ function Summary({ w, idOn }: { w: Workflow; idOn: boolean }) {
       )}
       <dl className="kv kv--stack mis__facts">
         <div><dt>Extra time</dt><dd>{minutes ? `About ${Math.ceil(minutes)} minute${Math.ceil(minutes) === 1 ? '' : 's'}` : 'None'}</dd></div>
+        <div><dt>Time limit</dt><dd>{w.settings.timeLimit.on ? `${w.settings.timeLimit.minutes} minutes for the whole assessment` : 'None for the whole assessment'}</dd></div>
         <div><dt>Supported devices</dt><dd>{devices.join(', ') || 'None chosen'}</dd></div>
         <div><dt>What’s kept</dt><dd>{kept.length ? <ul className="mis__kept">{kept.map((t) => <li key={t}>{t}</li>)}</ul> : 'Answers and browser events only.'}</dd></div>
       </dl>

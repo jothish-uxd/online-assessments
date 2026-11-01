@@ -1,6 +1,7 @@
 import type { Asset } from '../../data/content/types';
 import { useFileUrl } from '../../data/content/blobs';
 import { duration, ext } from '../../data/content/format';
+import Chart from './Chart';
 
 /** Small deterministic random numbers from an id, so placeholder art is stable. */
 function rng(seed: string) {
@@ -47,6 +48,9 @@ export default function Thumb({ asset, size = 'md' }: { asset: Asset; size?: 'sm
   const url = useFileUrl(asset.id, asset.hasFile);
   const cls = `thumb thumb--${asset.kind} thumb--${size}`;
 
+  if (asset.kind === 'chart' && asset.chart) {
+    return <span className={cls}><Chart spec={asset.chart} title={asset.title} size="thumb" /></span>;
+  }
   if (asset.kind === 'image') {
     return <span className={cls}>{url ? <img src={url} alt="" loading="lazy" /> : <SceneArt id={asset.id} />}</span>;
   }

@@ -11,6 +11,8 @@ import { a11yGap, deleteAssets, tagAssets, uploadFiles, useAssets, useModules, u
 import { KIND_LABEL, spec } from '../../data/content/format';
 import type { Asset, AssetKind } from '../../data/content/types';
 import AssetDetail from './AssetDetail';
+import NewChartDialog from './NewChartDialog';
+import { ChartIcon } from '../../components/content/icons';
 import { contentRoutes } from './routes';
 
 type KindFilter = 'all' | AssetKind;
@@ -22,6 +24,7 @@ const KINDS: { value: KindFilter; label: string }[] = [
   { value: 'video', label: 'Video' },
   { value: 'audio', label: 'Audio' },
   { value: 'document', label: 'Documents' },
+  { value: 'chart', label: 'Charts' },
 ];
 const SORTS: { value: Sort; label: string }[] = [
   { value: 'uploaded', label: 'Newest uploaded' },
@@ -56,6 +59,7 @@ export default function AssetsPage() {
 
   // The visual toast fades after a few seconds; the status region keeps the text for screen readers.
   const [toast, setToast] = useState('');
+  const [charting, setCharting] = useState(false);
   useEffect(() => {
     setToast(status);
     if (!status) return;
@@ -64,7 +68,7 @@ export default function AssetsPage() {
   }, [status]);
 
   const counts = useMemo(() => {
-    const c: Record<KindFilter, number> = { all: assets.length, image: 0, video: 0, audio: 0, document: 0 };
+    const c: Record<KindFilter, number> = { all: assets.length, image: 0, video: 0, audio: 0, document: 0, chart: 0 };
     assets.forEach((a) => { c[a.kind]++; });
     return c;
   }, [assets]);
@@ -160,11 +164,14 @@ export default function AssetsPage() {
         <header className="ca-head">
           <div>
             <h1 ref={h} tabIndex={-1} id="assets-title" className="ca-title">Assets</h1>
-            <p className="ca-sub">Images, video, audio and documents that items can show.</p>
+            <p className="ca-sub">Images, video, audio, documents and charts that items can show.</p>
           </div>
           <div className="ca-head__actions">
             <input ref={fileRef} type="file" multiple accept={ACCEPT} hidden
               onChange={(e) => { void upload([...(e.target.files ?? [])]); e.target.value = ''; }} />
+            <button type="button" className="btn btn--secondary" onClick={() => setCharting(true)}>
+              <ChartIcon /> New chart
+            </button>
             <button type="button" className="btn btn--primary" onClick={() => fileRef.current?.click()} disabled={!!progress}>
               <UploadIcon /> Upload files
             </button>
@@ -330,6 +337,9 @@ export default function AssetsPage() {
           </>
         }
       />
+
+      <NewChartDialog open={charting} onClose={() => setCharting(false)}
+        onCreated={(a) => { setCharting(false); setStatus(`Created the chart ${a.title}.`); navigate(contentRoutes.assets(a.id)); }} />
 
       <Dialog
         open={tagging}

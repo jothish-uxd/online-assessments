@@ -35,6 +35,7 @@ const base = (over: Partial<WorkflowSettings> = {}): WorkflowSettings => ({
   inviteSubject: 'Your Alliance assessment is ready',
   inviteBody: 'Thank you for applying to serve with the Alliance. Use the link below to take your online assessment. It takes about 45 standard minutes, and the link stays open for {link_days} days.',
   reminderDays: 3,
+  timeLimit: { on: false, minutes: 60, onExpire: 'submit', extraTime: [1.25, 1.5, 2] },
   ...over,
 });
 
@@ -57,9 +58,9 @@ export const SEED_WORKFLOWS: Workflow[] = [
     stage: 'build', version: 5, dirty: false,
     steps: [
       mod('m-consent'), mod('m-instructions'), idCheck(), mod('m-proctoring'), proctor(),
-      mod('m-pilot'), mod('m-customer-judgement'), mod('m-leadership'), mod('m-written'),
+      mod('m-pilot'), mod('m-customer-judgement'), mod('m-leadership'), mod('m-written'), mod('m-fleet-data'),
     ],
-    settings: base({ devices: ['desktop'], equivalent: ['w-analyst'], reviewers: { ops: ['hera'], program: ['mon'], e2e: null, signoff: ['mon'], launch: null } }),
+    settings: base({ devices: ['desktop'], equivalent: ['w-analyst'], timeLimit: { on: true, minutes: 75, onExpire: 'finish-item', extraTime: [1.25, 1.5, 2] }, reviewers: { ops: ['hera'], program: ['mon'], e2e: null, signoff: ['mon'], launch: null } }),
     scoring: SEED_SCORING['w-pilot'],
     misbehavior: defaultMisbehavior({ selfie: { on: true, badge: true, onsite: true, retentionDays: 365 }, video: { on: true, audio: true, retentionDays: 90 } }),
     testPlan: null,
@@ -95,7 +96,7 @@ export const SEED_WORKFLOWS: Workflow[] = [
     stage: 'e2e', version: 3, dirty: false,
     steps: [mod('m-consent'), mod('m-instructions'), mod('m-starship'), mod('m-numerical'), mod('m-customer-judgement')],
     settings: base({
-      ats: ['holonet-hire', 'rebel-recruit'], devices: ['desktop', 'tablet'],
+      ats: ['holonet-hire', 'rebel-recruit'], devices: ['desktop', 'tablet'], timeLimit: { on: true, minutes: 50, onExpire: 'submit', extraTime: [1.5, 2] },
       reviewers: { ops: ['hera'], program: ['mon'], e2e: null, signoff: ['mon'], launch: null },
     }),
     scoring: SEED_SCORING['w-mechanic'],
@@ -122,7 +123,7 @@ export const SEED_WORKFLOWS: Workflow[] = [
     stage: 'live', version: 9, dirty: false,
     steps: [mod('m-consent'), mod('m-instructions'), idCheck(), mod('m-proctoring'), proctor(), mod('m-intel'), mod('m-customer-judgement')],
     settings: base({
-      linkDays: 120, scoreDays: 365, ats: ['holonet-hire', 'mon-cala-talent'], devices: ['desktop'],
+      linkDays: 120, scoreDays: 365, ats: ['holonet-hire', 'mon-cala-talent'], devices: ['desktop'], timeLimit: { on: true, minutes: 60, onExpire: 'submit', extraTime: [1.25, 1.5, 2] },
       reviewers: { ops: ['hera'], program: ['mon'], e2e: ['jyn'], signoff: ['mon'], launch: ['hera'] },
     }),
     scoring: SEED_SCORING['w-analyst'],
@@ -151,7 +152,7 @@ export const SEED_WORKFLOWS: Workflow[] = [
   {
     id: 'w-medic', name: 'Field Medic L2', code: 'FIELD_MEDIC_L2_01377', type: 'Candidate',
     stage: 'build', version: 1, dirty: true,
-    steps: [mod('m-consent'), mod('m-medical')],
+    steps: [mod('m-consent'), mod('m-medical'), mod('m-medical-data')],
     settings: base({ devices: ['desktop', 'mobile'] }),
     scoring: SEED_SCORING['w-medic'],
     misbehavior: defaultMisbehavior(),
@@ -168,7 +169,7 @@ export const SEED_WORKFLOWS: Workflow[] = [
     id: 'w-comms', name: 'Comms Officer L3', code: 'COMMS_OFFICER_L3_02260', type: 'Candidate',
     stage: 'program-review', version: 2, dirty: false,
     steps: [mod('m-consent'), mod('m-instructions'), mod('m-intel'), mod('m-customer-judgement')],
-    settings: base({ ats: ['holonet-hire'], devices: ['desktop', 'mobile'], reviewers: { ops: ['hera'], program: ['mon'], e2e: null, signoff: ['mon'], launch: null } }),
+    settings: base({ ats: ['holonet-hire'], devices: ['desktop', 'mobile'], timeLimit: { on: true, minutes: 45, onExpire: 'submit', extraTime: [1.25, 1.5, 2] }, reviewers: { ops: ['hera'], program: ['mon'], e2e: null, signoff: ['mon'], launch: null } }),
     scoring: {
       variations: [],
       scores: [{

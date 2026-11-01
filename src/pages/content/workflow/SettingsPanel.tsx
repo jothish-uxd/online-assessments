@@ -5,7 +5,9 @@ import Menu from '../../../components/content/Menu';
 import { PlusIcon } from '../../../components/content/icons';
 import { PEOPLE, person } from '../../../data/content/people';
 import { ATS_OPTIONS, DEVICE_OPTIONS } from '../../../data/content/seedWorkflows';
-import { updateSettings, updateWorkflow, useWorkflows } from '../../../data/content/workflows';
+import { timedTotal, updateSettings, updateWorkflow, useWorkflows } from '../../../data/content/workflows';
+import { fmtSeconds, useModules } from '../../../data/content/store';
+import { AlertIcon, TimerIcon } from '../../../components/content/icons';
 import type { PersonId, Reviewers, Workflow } from '../../../data/content/types';
 import { contentRoutes } from '../routes';
 
@@ -79,6 +81,8 @@ export default function SettingsPanel({ w, editable }: { w: Workflow; editable: 
               <span id={`${id}-score-h`} className="field-help">How long a result can be reused.</span>
             </div>
           </div>
+
+          <TimeLimit w={w} />
 
           <fieldset className="checks checks--grid">
             <legend className="field__label">Supported ATSs <Req /></legend>
@@ -191,6 +195,63 @@ export default function SettingsPanel({ w, editable }: { w: Workflow; editable: 
         />
       )}
     </aside>
+  );
+}
+
+const EXTRA = [1.25, 1.5, 2];
+
+/** How long candidates have for the whole assessment. */
+function TimeLimit({ w }: { w: Workflow }) {
+  const id = useId();
+  const modules = useModules();
+  const tl = w.settings.timeLimit;
+  const set = (p: Partial<typeof tl>, action = 'Edited the time limit') => updateSettings(w.id, { timeLimit: { ...tl, ...p } }, action);
+  const t = timedTotal(w, modules);
+  const over = tl.on && tl.minutes > 0 && t.seconds > tl.minutes * 60;
+  return (
+    <fieldset className="timelimit">
+      <legend className="field__label"><TimerIcon /> Assessment time limit</legend>
+      <label className="check">
+        <input type="checkbox" checked={tl.on} onChange={(e) => set({ on: e.target.checked }, e.target.checked ? 'Turned on the time limit' : 'Turned off the time limit')} />
+        Limit how long candidates have for the whole assessment
+      </label>
+      {tl.on && (
+        <div className="timelimit__body">
+          <div className="field field--num">
+            <label className="field__label" htmlFor={`${id}-min`}>Minutes</label>
+            <input id={`${id}-min`} type="number" min={5} step={5} value={tl.minutes || ''} aria-invalid={!(tl.minutes > 0) || over}
+              aria-describedby={`${id}-sum`} onChange={(e) => set({ minutes: Number(e.target.value) })} />
+          </div>
+          <p id={`${id}-sum`} className={`field-help${over ? ' field-error-text' : ''}`}>
+            {over && <AlertIcon />}
+            Timed items add up to {fmtSeconds(t.seconds)}{t.untimed ? `, plus ${t.untimed} untimed item${t.untimed === 1 ? '' : 's'}` : ''}.
+            {over ? ' The limit is shorter than that.' : ' The clock starts after the system check and pauses during ID verification.'}
+          </p>
+          <fieldset className="checks checks--stack">
+            <legend className="field__label">When time runs out</legend>
+            <label className="check">
+              <input type="radio" name={`${id}-exp`} checked={tl.onExpire === 'submit'} onChange={() => set({ onExpire: 'submit' })} />
+              <span>Submit right away <span className="muted small">· answers so far are scored</span></span>
+            </label>
+            <label className="check">
+              <input type="radio" name={`${id}-exp`} checked={tl.onExpire === 'finish-item'} onChange={() => set({ onExpire: 'finish-item' })} />
+              <span>Let them finish the item they’re on <span className="muted small">· then submit</span></span>
+            </label>
+          </fieldset>
+          <fieldset className="checks checks--row">
+            <legend className="field__label">Extra time for approved accommodations</legend>
+            {EXTRA.map((x) => (
+              <label key={x} className="check">
+                <input type="checkbox" checked={tl.extraTime.includes(x)}
+                  onChange={(e) => set({ extraTime: e.target.checked ? [...tl.extraTime, x].sort() : tl.extraTime.filter((y) => y !== x) })} />
+                <span>{x}× <span className="muted small">({Math.round(tl.minutes * x)} min)</span></span>
+              </label>
+            ))}
+          </fieldset>
+          <span className="field-help">Extra time also stretches item timers by the same amount.</span>
+        </div>
+      )}
+    </fieldset>
   );
 }
 

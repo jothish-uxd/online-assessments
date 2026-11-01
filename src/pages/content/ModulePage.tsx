@@ -7,10 +7,11 @@ import { ActivityList, Byline } from '../../components/content/Byline';
 import { AlertIcon, CheckIcon, CopyIcon, DownIcon, PlusIcon, TrashIcon, TypeIcon, UpIcon } from '../../components/content/icons';
 import {
   addItem, deleteItem, deleteModule, duplicateItem, duplicateModule, itemIssues, modulePoints,
-  moveItem, newItem, updateModule, useAssets, useModules,
+  moveItem, newItem, updateModule, useAssets, useModules, fmtSeconds, itemSeconds, moduleTime, setModuleTiming,
 } from '../../data/content/store';
+import { TimerIcon } from '../../components/content/icons';
 import { ITEM_TYPES, allowedIn, purposeLabel, typeInfo } from '../../data/content/itemTypes';
-import type { Item, ItemType, Module } from '../../data/content/types';
+import type { Item, ItemType, Module, ModuleTiming } from '../../data/content/types';
 import ItemEditor from './ItemEditor';
 import { KIND_TEXT, StatusBadge } from './moduleBits';
 import { useWorkflows, workflowsUsing } from '../../data/content/workflows';
@@ -125,7 +126,7 @@ function ModuleView({ m }: { m: Module }) {
         <section aria-labelledby={`${id}-items`}>
           <div className="section-head">
             <h2 id={`${id}-items`} className="section-title">Items <span className="muted">{m.items.length}</span></h2>
-            {m.kind === 'evaluative' && <span className="muted small">{modulePoints(m)} points in total</span>}
+            {m.kind === 'evaluative' && <span className="muted small">{modulePoints(m)} points in total{timeLine(m)}</span>}
           </div>
 
           {m.items.length === 0 ? (
@@ -141,6 +142,7 @@ function ModuleView({ m }: { m: Module }) {
                 const open = openId === item.id;
                 const media = assets.find((a) => a.id === item.assetId);
                 const correct = item.choices?.filter((c) => c.correct).length ?? 0;
+                const secs = itemSeconds(m, item);
                 return (
                   <li key={item.id} id={`item-${item.id}`} className={`item${open ? ' is-open' : ''}`}>
                     <div className="item__row">
@@ -157,6 +159,9 @@ function ModuleView({ m }: { m: Module }) {
                         <span className="item__meta">
                           {info.scored && <span>{item.points} pt{item.points === 1 ? '' : 's'}</span>}
                           {item.choices && <span>{item.choices.length} choices · {correct} correct</span>}
+                          {item.questions && <span>{item.questions.length} question{item.questions.length === 1 ? '' : 's'}</span>}
+                          {secs !== null && <span className="item__timer"><TimerIcon /> {fmtSeconds(secs)}</span>}
+                          {secs === null && m.timing.mode === 'per-item' && info.scored && <span className="muted">Not timed</span>}
                           {item.type === 'content' && item.settings.requireAck && <span>Needs agreement</span>}
                           {media && <span className="item__media"><Thumb asset={media} size="sm" /> {media.title}</span>}
                           <span>Edited by <Byline stamp={item.edited} /></span>
@@ -177,7 +182,7 @@ function ModuleView({ m }: { m: Module }) {
                     </div>
                     {open && (
                       <div id={`${id}-ed-${item.id}`} className="item__editor">
-                        <ItemEditor moduleId={m.id} item={item} readOnly={readOnly} />
+                        <ItemEditor moduleId={m.id} item={item} readOnly={readOnly} timing={m.timing} />
                       </div>
                     )}
                   </li>
@@ -193,6 +198,7 @@ function ModuleView({ m }: { m: Module }) {
 
         <aside className="module__side" aria-label="About this module">
           <Details m={m} readOnly={readOnly} />
+          {m.kind === 'evaluative' && <Timing m={m} readOnly={readOnly} />}
           <dl className="kv">
             <div><dt>Kind</dt><dd>{KIND_TEXT[m.kind]}</dd></div>
             <div><dt>Items</dt><dd>{m.items.length}{m.kind === 'evaluative' && <span className="muted"> · {modulePoints(m)} points</span>}</dd></div>
@@ -283,6 +289,60 @@ function ModuleView({ m }: { m: Module }) {
         }
       />
     </div>
+  );
+}
+
+function timeLine(m: Module) {
+  if (m.timing.mode === 'off') return '';
+  const t = moduleTime(m);
+  return ` · ${fmtSeconds(t.seconds)} timed${t.untimed ? `, ${t.untimed} untimed` : ''}`;
+}
+
+/** Whether items are timed: not at all, the same for every item, or item by item. */
+function Timing({ m, readOnly }: { m: Module; readOnly: boolean }) {
+  const id = useId();
+  const [secs, setSecs] = useState(String(m.timing.seconds));
+  useEffect(() => setSecs(String(m.timing.seconds)), [m.timing.seconds]);
+  const set = (t: ModuleTiming) => setModuleTiming(m.id, t);
+  const t = moduleTime(m);
+  const n = Number(secs);
+  const bad = m.timing.mode === 'each' && (!secs || Number.isNaN(n) || n < 10);
+  const OPTS: { v: ModuleTiming['mode']; label: string; help: string }[] = [
+    { v: 'off', label: 'No item timer', help: 'Candidates move at their own pace. The whole assessment can still have a time limit.' },
+    { v: 'each', label: 'Same time for every item', help: 'Each scored item counts down from the same time, then moves on.' },
+    { v: 'per-item', label: 'Set time item by item', help: 'Give longer items, like charts, more time. Leave an item blank to not time it.' },
+  ];
+  return (
+    <fieldset className="plain-fieldset timing" disabled={readOnly}>
+      <legend className="detail__h3"><TimerIcon /> Item timer</legend>
+      <div className="radio-cards">
+        {OPTS.map((o) => (
+          <label key={o.v} className={`radio-card${m.timing.mode === o.v ? ' is-on' : ''}`}>
+            <input type="radio" name={`${id}-mode`} checked={m.timing.mode === o.v} onChange={() => set({ ...m.timing, mode: o.v })} aria-describedby={`${id}-${o.v}`} />
+            <span>
+              <span className="radio-card__label">{o.label}</span>
+              <span id={`${id}-${o.v}`} className="field-help">{o.help}</span>
+            </span>
+          </label>
+        ))}
+      </div>
+      {m.timing.mode === 'each' && (
+        <div className="field field--num">
+          <label className="field__label" htmlFor={`${id}-s`}>Seconds per item</label>
+          <input id={`${id}-s`} type="number" min={10} step={5} value={secs} aria-invalid={bad}
+            aria-describedby={`${id}-sh`}
+            onChange={(e) => setSecs(e.target.value)}
+            onBlur={() => { if (!bad && n !== m.timing.seconds) set({ ...m.timing, seconds: n }); }} />
+          <span id={`${id}-sh`} className={bad ? 'field-help field-error-text' : 'field-help'}>{bad ? 'Use 10 seconds or more.' : fmtSeconds(m.timing.seconds)}</span>
+        </div>
+      )}
+      {m.timing.mode !== 'off' && (
+        <p className="timing__sum small">
+          <strong>{fmtSeconds(t.seconds)}</strong> across {t.scored - t.untimed} timed item{t.scored - t.untimed === 1 ? '' : 's'}
+          {t.untimed > 0 && <>; {t.untimed} not timed</>}. Content blocks are never timed.
+        </p>
+      )}
+    </fieldset>
   );
 }
 

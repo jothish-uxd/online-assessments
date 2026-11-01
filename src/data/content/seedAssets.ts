@@ -212,4 +212,62 @@ export const SEED_ASSETS: Asset[] = [
     alt: '', caption: 'Draft, waiting on Mon’s review.', transcript: '', tags: ['rubric', 'spoken'],
     created: st('leia', '2026-10-28T10:20'),
   }),
+
+  /* ---------- Charts: drawn from data ---------- */
+  asset({
+    id: 'a-chart-sorties', kind: 'chart', title: 'Sorties flown by squadron, last cycle', fileName: 'sorties-by-squadron.chart.json', mime: 'application/json',
+    size: 1_204, alt: '', caption: '', transcript: '', tags: ['chart', 'pilot'],
+    chart: { type: 'vbar', categories: ['Red', 'Gold', 'Rogue', 'Blue', 'Green'], series: [{ name: 'Sorties', values: [42, 31, 55, 18, 27] }], xLabel: 'Squadron', yLabel: 'Sorties' },
+    created: st('cassian', '2026-10-31T09:40'),
+  }),
+  asset({
+    id: 'a-chart-backlog', kind: 'chart', title: 'Repair backlog by ship class', fileName: 'repair-backlog.chart.json', mime: 'application/json',
+    size: 1_380, alt: '', caption: 'Open repair tickets at Echo Base, end of last cycle.', transcript: '', tags: ['chart', 'mechanics'],
+    chart: { type: 'hbar', categories: ['X-wing', 'Y-wing', 'Snowspeeder', 'B-wing', 'A-wing', 'U-wing'], series: [{ name: 'Open repairs', values: [24, 17, 15, 12, 9, 6] }], xLabel: 'Open repairs' },
+    created: st('cassian', '2026-10-31T09:50'),
+  }),
+  asset({
+    id: 'a-chart-fuel', kind: 'chart', title: 'Fleet fuel budget by use', fileName: 'fuel-budget.chart.json', mime: 'application/json',
+    size: 990, alt: '', caption: '', transcript: '', tags: ['chart', 'quartermaster'],
+    chart: { type: 'donut', categories: ['Patrols', 'Supply runs', 'Training', 'Evacuation reserve', 'Other'], series: [{ name: 'Share of budget', values: [38, 27, 15, 12, 8] }], unit: '%' },
+    created: st('cassian', '2026-10-31T10:05'),
+  }),
+  asset({
+    id: 'a-chart-patients', kind: 'chart', title: 'Patients treated by injury type', fileName: 'patients-by-injury.chart.json', mime: 'application/json',
+    size: 1_510, alt: '', caption: '', transcript: '', tags: ['chart', 'medical'],
+    chart: {
+      type: 'stacked', categories: ['Redemption', 'Home One med bay', 'Echo Base med bay'],
+      series: [{ name: 'Blaster burns', values: [34, 22, 9] }, { name: 'Cold exposure', values: [12, 5, 41] }, { name: 'Crash injuries', values: [20, 31, 14] }],
+      xLabel: 'Patients treated',
+    },
+    created: st('hera', '2026-10-31T09:05'),
+  }),
+  asset({
+    id: 'a-chart-bacta', kind: 'chart', title: 'Bacta reserves by base', fileName: 'bacta-reserves.chart.json', mime: 'application/json',
+    size: 1_760, alt: '', caption: 'Crates on hand at the end of each week.', transcript: '', tags: ['chart', 'medical', 'supply'],
+    chart: {
+      type: 'line', categories: ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7', 'W8'],
+      series: [
+        { name: 'Echo Base', values: [120, 112, 101, 95, 80, 72, 60, 52] },
+        { name: 'Home One', values: [90, 92, 95, 93, 98, 101, 104, 106] },
+        { name: 'Yavin 4', values: [70, 70, 69, 75, 74, 73, 74, 72] },
+      ],
+      xLabel: 'Week', yLabel: 'Crates',
+    },
+    created: st('hera', '2026-10-31T09:20'),
+  }),
+  asset({
+    id: 'a-chart-sims', kind: 'chart', title: 'Simulator results: accuracy and reaction time', fileName: 'simulator-results.chart.json', mime: 'application/json',
+    size: 1_640, alt: '', caption: 'One point per pilot, from the last simulator run.', transcript: '', tags: ['chart', 'pilot'],
+    chart: {
+      type: 'scatter', categories: [], series: [],
+      points: [
+        { group: 'Red Squadron', x: 210, y: 88 }, { group: 'Red Squadron', x: 230, y: 84 }, { group: 'Red Squadron', x: 250, y: 79 }, { group: 'Red Squadron', x: 240, y: 82 },
+        { group: 'Gold Squadron', x: 280, y: 71 }, { group: 'Gold Squadron', x: 300, y: 68 }, { group: 'Gold Squadron', x: 260, y: 75 }, { group: 'Gold Squadron', x: 290, y: 70 },
+        { group: 'Rogue Squadron', x: 190, y: 93 }, { group: 'Rogue Squadron', x: 200, y: 91 }, { group: 'Rogue Squadron', x: 185, y: 95 }, { group: 'Rogue Squadron', x: 205, y: 90 },
+      ],
+      xLabel: 'Reaction time (ms)', yLabel: 'Accuracy (%)',
+    },
+    created: st('jyn', '2026-11-01T08:35'),
+  }),
 ];

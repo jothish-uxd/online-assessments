@@ -1,12 +1,12 @@
 import { peek, put, useStored } from '../store';
-import { now } from './store';
+import { fmtSeconds, moduleTime, now } from './store';
 import { SEED_WORKFLOWS } from './seedWorkflows';
 import type { Activity, CommentTarget, Misbehavior, Module, PersonId, Thread, TestCase, TestPlan, TestSuite, Score, Stage, Step, Variation, Workflow, WorkflowSettings } from './types';
 import { checkR, checkScratch, inputsFor, outputsOf } from './scoring';
 import { NO_VIDEO_DEVICES, defaultMisbehavior } from './misbehavior';
 
 // v5: workflows gained composite scores, misbehavior settings and test plans.
-const KEY = 'content:v6:workflows'; // v6: review rounds and comments
+const KEY = 'content:v7:workflows'; // v7: time limits
 const all = () => peek<Workflow[]>(KEY) ?? SEED_WORKFLOWS;
 export const useWorkflows = () => useStored<Workflow[]>(KEY, () => SEED_WORKFLOWS)[0];
 
@@ -265,6 +265,19 @@ export const workflowsUsing = (moduleId: string, list: Workflow[]) =>
 
 export interface Issue { text: string; stepId?: string }
 
+/** Seconds of timed items across the workflow's modules, and how many scored items are untimed. */
+export function timedTotal(w: Workflow, modules: Module[]) {
+  let seconds = 0; let untimed = 0;
+  for (const s of w.steps) {
+    if (s.kind !== 'module') continue;
+    const m = modules.find((x) => x.id === s.moduleId);
+    if (!m) continue;
+    const t = moduleTime(m);
+    seconds += t.seconds; untimed += t.untimed;
+  }
+  return { seconds, untimed };
+}
+
 export function validate(w: Workflow, modules: Module[]): Issue[] {
   const out: Issue[] = [];
   const mods = w.steps.map((s) => s.kind === 'module' ? modules.find((m) => m.id === s.moduleId) : undefined);
@@ -304,6 +317,12 @@ export function validate(w: Workflow, modules: Module[]): Issue[] {
   if (mb.video.on && w.settings.devices.some((d) => NO_VIDEO_DEVICES.includes(d))) out.push({ text: 'Video proctoring only works on desktop and laptop. Remove the other supported devices, or turn video off.' });
   if (w.steps.some((s) => s.kind === 'id-check') && !mb.id.documents.length) out.push({ text: 'Choose at least one ID document candidates can show.' });
   if (w.steps.some((s) => s.kind === 'id-check') && !mb.selfie.on) out.push({ text: 'ID verification compares the ID photo with a selfie. Turn on selfie capture.' });
+  const tl = w.settings.timeLimit;
+  if (tl.on) {
+    const t = timedTotal(w, modules);
+    if (!(tl.minutes > 0)) out.push({ text: 'Set how many minutes candidates have for the whole assessment.' });
+    else if (t.seconds > tl.minutes * 60) out.push({ text: `Timed items add up to ${fmtSeconds(t.seconds)}, longer than the ${tl.minutes} min time limit. Raise the limit or shorten item timers.` });
+  }
   if (!(w.settings.linkDays > 0)) out.push({ text: 'Set how many days the workflow link stays open.' });
   if (!(w.settings.scoreDays > 0)) out.push({ text: 'Set how many days scores stay valid.' });
   if (!w.settings.ats.length) out.push({ text: 'Choose at least one supported ATS.' });

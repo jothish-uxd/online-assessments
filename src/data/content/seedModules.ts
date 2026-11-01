@@ -1,4 +1,4 @@
-import type { Activity, Choice, Item, ItemSettings, ItemType, Module, PersonId, Stamp } from './types';
+import type { Activity, ChartQuestion, Choice, Item, ItemSettings, ItemType, Module, ModuleTiming, PersonId, Stamp } from './types';
 import { st } from './seedAssets';
 
 let n = 0;
@@ -20,9 +20,19 @@ function item(
 
 const log = (by: PersonId, at: string, action: string): Activity => ({ ...st(by, at), action });
 
+/** A single-select question about a chart. `correct` is the index of the right choice (-1 for none yet). */
+const q = (prompt: string, opts: string[], correct: number, points = 1): ChartQuestion =>
+  ({ id: `q${++n}`, prompt, choices: opts.map((t, i) => ch(t, i === correct)), points });
+function chartItem(id: string, assetId: string, prompt: string, created: Stamp, questions: ChartQuestion[], timeSeconds?: number): Item {
+  return item(id, 'chart', prompt, created, {
+    assetId, questions, points: questions.reduce((s, x) => s + x.points, 0),
+    settings: { shuffle: true, ...(timeSeconds ? { timeSeconds } : {}) },
+  });
+}
+
 const sel = (opts: string[], correct: number[] = [0]) => opts.map((t, i) => ch(t, correct.includes(i)));
 
-export const SEED_MODULES: Module[] = [
+const RAW: (Omit<Module, 'timing'> & { timing?: ModuleTiming })[] = [
   /* ---------- Non-evaluative ---------- */
   {
     id: 'm-consent', name: 'Candidate consent and privacy', kind: 'non-evaluative', status: 'published',
@@ -170,7 +180,7 @@ export const SEED_MODULES: Module[] = [
     ],
   },
   {
-    id: 'm-numerical', name: 'Numerical reasoning', kind: 'evaluative', status: 'draft',
+    id: 'm-numerical', name: 'Numerical reasoning', kind: 'evaluative', status: 'draft', timing: { mode: 'each', seconds: 60 },
     description: 'Reading charts and manifests to make supply decisions.',
     created: st('cassian', '2026-09-15T09:50'), edited: st('cassian', '2026-10-29T11:10'),
     history: [
@@ -233,7 +243,7 @@ export const SEED_MODULES: Module[] = [
     ],
   },
   {
-    id: 'm-pilot', name: 'Pilot readiness: spatial reasoning', kind: 'evaluative', status: 'in-review',
+    id: 'm-pilot', name: 'Pilot readiness: spatial reasoning', kind: 'evaluative', status: 'in-review', timing: { mode: 'each', seconds: 90 },
     description: 'Route planning and spatial judgement for starfighter pilot roles.',
     created: st('jyn', '2026-10-05T10:40'), edited: st('jyn', '2026-10-22T17:15'),
     history: [
@@ -344,4 +354,80 @@ export const SEED_MODULES: Module[] = [
     history: [log('cassian', '2026-10-29T11:20', 'Created the module')],
     items: [],
   },
+
+  /* ---------- Chart interpretation ---------- */
+  {
+    id: 'm-fleet-data', name: 'Data interpretation: fleet operations', kind: 'evaluative', status: 'published',
+    description: 'Reading bar and donut charts about sorties, repairs and fuel to make operational calls.',
+    timing: { mode: 'each', seconds: 120 },
+    created: st('cassian', '2026-10-31T10:00'), edited: st('mon', '2026-10-31T16:20'),
+    history: [
+      log('mon', '2026-10-31T16:20', 'Published'),
+      log('hera', '2026-10-31T14:05', 'Approved after review'),
+      log('cassian', '2026-10-31T11:30', 'Set every item to 2 minutes'),
+      log('cassian', '2026-10-31T10:00', 'Created the module'),
+    ],
+    items: [
+      chartItem('i-fd-1', 'a-chart-sorties', 'Use the chart of sorties flown last cycle to answer the questions.', st('cassian', '2026-10-31T10:10'), [
+        q('Which squadron flew the most sorties?', ['Red Squadron', 'Gold Squadron', 'Rogue Squadron', 'Green Squadron'], 2),
+        q('About how many more sorties did Red Squadron fly than Blue Squadron?', ['13', '18', '24', '31'], 2),
+        q('Which two squadrons together flew closest to Rogue Squadron’s total?', ['Red and Blue', 'Gold and Green', 'Blue and Green', 'Red and Gold'], 1),
+      ]),
+      chartItem('i-fd-2', 'a-chart-backlog', 'Use the repair backlog chart to answer the questions.', st('cassian', '2026-10-31T10:25'), [
+        q('Which ship class has the second-largest repair backlog?', ['X-wing', 'Y-wing', 'Snowspeeder', 'B-wing'], 1),
+        q('If the crew clears 6 X-wing repairs a day and takes no new ones, how many days until the X-wing backlog is clear?', ['3 days', '4 days', '5 days', '6 days'], 1),
+      ]),
+      chartItem('i-fd-3', 'a-chart-fuel', 'Use the fuel budget chart to answer the questions.', st('cassian', '2026-10-31T10:40'), [
+        q('Which two uses together take up more than half of the fuel budget?', ['Training and evacuation reserve', 'Patrols and supply runs', 'Supply runs and training', 'Evacuation reserve and other'], 1),
+        q('If the fleet’s fuel budget is 2,000 units, how many units go to training?', ['150', '240', '300', '380'], 2),
+      ]),
+    ],
+  },
+  {
+    id: 'm-medical-data', name: 'Medical data interpretation', kind: 'evaluative', status: 'published',
+    description: 'Segmented bars and trend lines about patients and bacta supplies.',
+    timing: { mode: 'per-item', seconds: 90 },
+    created: st('hera', '2026-10-31T09:00'), edited: st('mon', '2026-10-31T15:40'),
+    history: [
+      log('mon', '2026-10-31T15:40', 'Published'),
+      log('hera', '2026-10-31T12:00', 'Gave item 1 three minutes; it has three questions'),
+      log('hera', '2026-10-31T09:00', 'Created the module'),
+    ],
+    items: [
+      chartItem('i-md-c1', 'a-chart-patients', 'Use the chart of patients treated on each medical frigate.', st('hera', '2026-10-31T09:15'), [
+        q('Which frigate treated the most patients overall?', ['Redemption', 'Home One med bay', 'Echo Base med bay'], 0),
+        q('At Echo Base med bay, which injury type was most common?', ['Blaster burns', 'Cold exposure', 'Crash injuries'], 1),
+        q('Across all three frigates, how many crash injuries were treated?', ['51', '58', '65', '71'], 2),
+      ], 180),
+      chartItem('i-md-c2', 'a-chart-bacta', 'Use the chart of bacta reserves over the last eight weeks.', st('hera', '2026-10-31T09:40'), [
+        q('Which base’s bacta reserves fell every week?', ['Echo Base', 'Home One', 'Yavin 4'], 0),
+        q('In which week did Home One first hold more bacta than Echo Base?', ['Week 3', 'Week 4', 'Week 5', 'Week 6'], 2),
+      ], 120),
+    ],
+  },
+  {
+    id: 'm-pilot-analytics', name: 'Pilot analytics', kind: 'evaluative', status: 'draft',
+    description: 'Simulator results and what they say about squadron readiness.',
+    created: st('jyn', '2026-11-01T08:30'), edited: st('jyn', '2026-11-01T09:10'),
+    history: [
+      log('jyn', '2026-11-01T09:10', 'Added item 2'),
+      log('jyn', '2026-11-01T08:30', 'Created the module'),
+    ],
+    items: [
+      chartItem('i-pa-1', 'a-chart-sims', 'Use the scatter plot of simulator results to answer the questions.', st('jyn', '2026-11-01T08:40'), [
+        q('Which squadron had the fastest reaction times overall?', ['Red Squadron', 'Gold Squadron', 'Rogue Squadron'], 2),
+        q('What does the chart suggest about reaction time and accuracy?', [
+          'Faster reaction times go with higher accuracy',
+          'Slower reaction times go with higher accuracy',
+          'There’s no relationship between them',
+          'Only Gold Squadron shows a pattern',
+        ], 0),
+      ]),
+      chartItem('i-pa-2', 'a-chart-sorties', 'Use the sorties chart.', st('jyn', '2026-11-01T09:10'), [
+        q('Which squadron flew fewer than 20 sorties?', ['Blue Squadron', 'Green Squadron', 'Gold Squadron'], -1),
+      ]),
+    ],
+  },
 ];
+
+export const SEED_MODULES: Module[] = RAW.map((m) => ({ timing: { mode: 'off', seconds: 60 }, ...m }));

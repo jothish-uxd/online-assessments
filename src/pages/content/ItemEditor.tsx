@@ -4,17 +4,18 @@ import Select from '../../components/Select';
 import Thumb from '../../components/content/Thumb';
 import { Byline } from '../../components/content/Byline';
 import { AlertIcon, CloseIcon, PlusIcon } from '../../components/content/icons';
-import { choiceId, itemIssues, updateItem, useAssets } from '../../data/content/store';
+import { choiceId, fmtSeconds, itemIssues, newQuestion, updateItem, useAssets } from '../../data/content/store';
+import Chart from '../../components/content/Chart';
 import { PURPOSES, typeInfo } from '../../data/content/itemTypes';
 import { KIND_LABEL, spec } from '../../data/content/format';
-import type { Choice, ContentPurpose, Item, ItemSettings } from '../../data/content/types';
+import type { ChartQuestion, Choice, ContentPurpose, Item, ItemSettings, ModuleTiming } from '../../data/content/types';
 import AssetPicker from './AssetPicker';
 import { contentRoutes } from './routes';
 
-interface Props { moduleId: string; item: Item; readOnly: boolean }
+interface Props { moduleId: string; item: Item; readOnly: boolean; timing?: ModuleTiming }
 
 /** Edit one item in place. Changes save as you type, stamped with you and the time. */
-export default function ItemEditor({ moduleId, item, readOnly }: Props) {
+export default function ItemEditor({ moduleId, item, readOnly, timing }: Props) {
   const id = useId();
   const assets = useAssets();
   const [picking, setPicking] = useState(false);
@@ -35,6 +36,7 @@ export default function ItemEditor({ moduleId, item, readOnly }: Props) {
     item.type === 'content' ? 'Text candidates read'
     : item.type === 'spoken' ? 'Content to read, and what to say'
     : item.type === 'listen-write' ? 'Instructions'
+    : item.type === 'chart' ? 'Instructions above the chart'
     : 'Item stem';
 
   return (
@@ -54,12 +56,37 @@ export default function ItemEditor({ moduleId, item, readOnly }: Props) {
 
       <div className="field">
         <label className="field__label" htmlFor={`${id}-prompt`}>{promptLabel}</label>
-        <textarea id={`${id}-prompt`} data-autofocus rows={item.type === 'content' ? 5 : 3} value={item.prompt}
+        <textarea id={`${id}-prompt`} data-autofocus rows={item.type === 'content' ? 5 : item.type === 'chart' ? 2 : 3} value={item.prompt}
           onChange={(e) => set({ prompt: e.target.value })} />
       </div>
 
+      {item.type === 'chart' && (
+        <div className="field">
+          <span className="field__label" id={`${id}-chart`}>Chart</span>
+          {media?.chart ? (
+            <div className="chart-pick">
+              <Chart spec={media.chart} title={media.title} />
+              {!readOnly && (
+                <span className="media-pick__actions">
+                  <button type="button" className="link-button" onClick={() => setPicking(true)}>Change chart</button>
+                  <Link to={contentRoutes.assets(media.id)} className="link-button">Edit in Assets</Link>
+                </span>
+              )}
+            </div>
+          ) : (
+            <div>
+              <button type="button" className="btn btn--secondary btn--sm" aria-describedby={`${id}-chart`} onClick={() => setPicking(true)}>
+                <PlusIcon /> Choose chart
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {item.type === 'chart' && <ChartQuestions id={id} questions={item.questions ?? []} readOnly={readOnly} onChange={(q) => set({ questions: q })} />}
+
       {/* Media from the asset library */}
-      <div className="field">
+      {item.type !== 'chart' && <div className="field">
         <span className="field__label" id={`${id}-media`}>
           {item.type === 'listen-write' ? 'Audio clip' : 'Media'} {item.type !== 'listen-write' && <span className="muted">(optional)</span>}
         </span>
@@ -84,7 +111,7 @@ export default function ItemEditor({ moduleId, item, readOnly }: Props) {
             </button>
           </div>
         )}
-      </div>
+      </div>}
 
       {(item.type === 'single' || item.type === 'multi') && (
         <fieldset className="choices">
@@ -176,7 +203,16 @@ export default function ItemEditor({ moduleId, item, readOnly }: Props) {
 
       {info.scored && (
         <div className="item-editor__scoring">
-          <NumField id={`${id}-pts`} label="Points" value={item.points} onChange={(v) => set({ points: num(v) ?? 0 })} />
+          {item.type === 'chart'
+            ? <div className="field field--num"><span className="field__label">Points</span><span className="readout">{item.points} <span className="muted small">total of its questions</span></span></div>
+            : <NumField id={`${id}-pts`} label="Points" value={item.points} onChange={(v) => set({ points: num(v) ?? 0 })} />}
+          {timing?.mode === 'per-item' && (
+            <NumField id={`${id}-time`} label="Time limit (seconds)" value={item.settings.timeSeconds} min={10}
+              onChange={(v) => setS({ timeSeconds: num(v) })} />
+          )}
+          {timing?.mode === 'each' && (
+            <div className="field field--num"><span className="field__label">Time limit</span><span className="readout">{fmtSeconds(timing.seconds)} <span className="muted small">same for every item</span></span></div>
+          )}
           <label className="check">
             <input type="checkbox" checked={item.required} onChange={(e) => set({ required: e.target.checked })} />
             Candidates must answer
@@ -200,10 +236,79 @@ export default function ItemEditor({ moduleId, item, readOnly }: Props) {
         open
         onClose={() => setPicking(false)}
         current={item.assetId}
-        kinds={info.media === 'audio' ? ['audio'] : undefined}
+        kinds={info.media === 'audio' ? ['audio'] : info.media === 'chart' ? ['chart'] : undefined}
         onPick={(aid) => { set({ assetId: aid }); setPicking(false); }}
       />}
     </fieldset>
+  );
+}
+
+/** One to three single-select questions about the chart. */
+function ChartQuestions({ id, questions, readOnly, onChange }: { id: string; questions: ChartQuestion[]; readOnly: boolean; onChange: (q: ChartQuestion[]) => void }) {
+  const setQ = (qid: string, patch: Partial<ChartQuestion>) => onChange(questions.map((q) => q.id === qid ? { ...q, ...patch } : q));
+  const focusLast = () => requestAnimationFrame(() => (document.querySelector(`#${CSS.escape(id)}-qs > li:last-child textarea`) as HTMLElement | null)?.focus());
+  return (
+    <section className="cq" aria-labelledby={`${id}-qh`}>
+      <div className="cq__head">
+        <h3 id={`${id}-qh`} className="field__label">Questions about the chart <span className="muted">({questions.length} of 3)</span></h3>
+        <p className="field-help">Each question is single select: candidates pick one answer. Mark the correct one.</p>
+      </div>
+      <ol className="cq__list" id={`${id}-qs`}>
+        {questions.map((q, qi) => (
+          <li key={q.id} className="cq__q">
+            <fieldset>
+              <legend className="cq__legend">Question {qi + 1}</legend>
+              <div className="field">
+                <label className="visually-hidden" htmlFor={`${id}-${q.id}-p`}>Question {qi + 1}</label>
+                <textarea id={`${id}-${q.id}-p`} rows={2} value={q.prompt} placeholder="For example: Which squadron flew the most sorties?"
+                  onChange={(e) => setQ(q.id, { prompt: e.target.value })} />
+              </div>
+              <ol className="choices__list">
+                {q.choices.map((c, i) => (
+                  <li key={c.id} className={`choice${c.correct ? ' is-correct' : ''}`}>
+                    <label className="choice__mark">
+                      <input type="radio" name={`${id}-${q.id}-correct`} checked={c.correct}
+                        onChange={() => setQ(q.id, { choices: q.choices.map((x) => ({ ...x, correct: x.id === c.id })) })} />
+                      <span className="visually-hidden">Question {qi + 1}, choice {i + 1} is correct</span>
+                    </label>
+                    <span className="choice__letter" aria-hidden="true">{String.fromCharCode(65 + i)}</span>
+                    <input className="choice__text" aria-label={`Question ${qi + 1}, choice ${i + 1}`} value={c.text} placeholder={`Choice ${i + 1}`}
+                      onChange={(e) => setQ(q.id, { choices: q.choices.map((x) => x.id === c.id ? { ...x, text: e.target.value } : x) })} />
+                    {c.correct && <span className="choice__flag">Correct</span>}
+                    {!readOnly && (
+                      <button type="button" className="bframe__btn" aria-label={`Remove question ${qi + 1}, choice ${i + 1}`} disabled={q.choices.length <= 2}
+                        onClick={() => setQ(q.id, { choices: q.choices.filter((x) => x.id !== c.id) })}><CloseIcon /></button>
+                    )}
+                  </li>
+                ))}
+              </ol>
+              <div className="cq__foot">
+                {!readOnly && (
+                  <button type="button" className="btn btn--ghost btn--sm" disabled={q.choices.length >= 6}
+                    onClick={() => setQ(q.id, { choices: [...q.choices, { id: choiceId(), text: '', correct: false }] })}>
+                    <PlusIcon /> Add choice
+                  </button>
+                )}
+                <NumField id={`${id}-${q.id}-pts`} label="Points" value={q.points} min={0}
+                  onChange={(v) => setQ(q.id, { points: v === '' ? 0 : Math.max(0, Number(v)) })} />
+                {!readOnly && questions.length > 1 && (
+                  <button type="button" className="link-button btn--danger-text" onClick={() => onChange(questions.filter((x) => x.id !== q.id))}>
+                    Remove question {qi + 1}
+                  </button>
+                )}
+              </div>
+            </fieldset>
+          </li>
+        ))}
+      </ol>
+      {!readOnly && (
+        <button type="button" className="btn btn--secondary btn--sm" disabled={questions.length >= 3}
+          onClick={() => { onChange([...questions, newQuestion()]); focusLast(); }}>
+          <PlusIcon /> Add question
+        </button>
+      )}
+      {!readOnly && questions.length >= 3 && <span className="field-help"> A chart can carry up to three questions.</span>}
+    </section>
   );
 }
 

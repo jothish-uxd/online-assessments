@@ -9,7 +9,23 @@ export interface Activity extends Stamp { action: string }
 
 /* ---------- Assets ---------- */
 
-export type AssetKind = 'image' | 'video' | 'audio' | 'document';
+export type AssetKind = 'image' | 'video' | 'audio' | 'document' | 'chart';
+
+/* Charts are drawn from data, in the a11y-charts style: patterns, dash styles and marker shapes, never colour. */
+export type ChartType = 'vbar' | 'hbar' | 'stacked' | 'donut' | 'line' | 'scatter';
+export interface ChartSpec {
+  type: ChartType;
+  /** Bar labels, slice labels, or x-axis labels for lines. Unused for scatter. */
+  categories: string[];
+  /** One series for bars and donuts; several for segmented bars and lines. */
+  series: { name: string; values: number[] }[];
+  /** Scatter only */
+  points?: { group: string; x: number; y: number }[];
+  xLabel?: string;
+  yLabel?: string;
+  /** Shown after values, e.g. "%" or " crates" */
+  unit?: string;
+}
 
 export interface Asset {
   id: string;
@@ -34,6 +50,8 @@ export interface Asset {
   history: Activity[];
   /** true when the file itself is stored in this browser (uploaded here) */
   hasFile: boolean;
+  /** Charts: the data they're drawn from */
+  chart?: ChartSpec;
 }
 
 /* ---------- Modules and items ---------- */
@@ -42,8 +60,14 @@ export type ModuleKind = 'evaluative' | 'non-evaluative';
 export type ModuleStatus = 'draft' | 'in-review' | 'published';
 
 export type ItemType =
-  | 'single' | 'multi' | 'paragraph' | 'spoken' | 'listen-write' | 'content'
+  | 'single' | 'multi' | 'paragraph' | 'spoken' | 'listen-write' | 'chart' | 'content'
   | 'inbox' | 'ai-conversation';
+
+/** A single-select question about a chart. A chart item holds one to three. */
+export interface ChartQuestion { id: string; prompt: string; choices: Choice[]; points: number }
+
+/** How a module times its items. */
+export interface ModuleTiming { mode: 'off' | 'each' | 'per-item'; seconds: number }
 
 export type ContentPurpose = 'terms' | 'privacy' | 'consent' | 'instructions' | 'type-instructions';
 
@@ -65,6 +89,8 @@ export interface ItemSettings {
   attempts?: number;
   /** listen-write */
   plays?: number;
+  /** Time limit for this item, in seconds, when the module times items one by one */
+  timeSeconds?: number;
   /** content */
   purpose?: ContentPurpose;
   requireAck?: boolean;
@@ -81,6 +107,8 @@ export interface Item {
   /** Media shown or played with the prompt */
   assetId?: string;
   choices?: Choice[];
+  /** Chart items: the questions about the chart */
+  questions?: ChartQuestion[];
   points: number;
   required: boolean;
   settings: ItemSettings;
@@ -95,6 +123,7 @@ export interface Module {
   kind: ModuleKind;
   status: ModuleStatus;
   items: Item[];
+  timing: ModuleTiming;
   created: Stamp;
   edited: Stamp;
   history: Activity[];
@@ -124,6 +153,8 @@ export interface WorkflowSettings {
   inviteSubject: string;
   inviteBody: string;
   reminderDays: number;
+  /** Time for the whole assessment */
+  timeLimit: { on: boolean; minutes: number; onExpire: 'submit' | 'finish-item'; extraTime: number[] };
 }
 
 export interface Workflow {
