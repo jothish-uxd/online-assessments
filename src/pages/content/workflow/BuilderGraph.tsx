@@ -1,16 +1,13 @@
 import { useId, useState, type DragEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
 import Menu from '../../../components/content/Menu';
 import { AlertIcon, PlusIcon } from '../../../components/content/icons';
 import { fmtSeconds, modulePoints, moduleTime, useModules } from '../../../data/content/store';
 import { insertStep, moveStep, removeStep, type Issue } from '../../../data/content/workflows';
 import type { Module, Step, Workflow } from '../../../data/content/types';
 import { StatusBadge } from '../moduleBits';
-import { contentRoutes } from '../routes';
 import AddPopover, { type AddChoice } from './AddPopover';
 import SettingsPanel from './SettingsPanel';
 import { GripIcon, IdIcon, ProctorIcon } from './icons';
-import { CommentButton, useComments } from './comments/Comments';
 
 interface Props { w: Workflow; editable: boolean; issues: Issue[] }
 
@@ -29,9 +26,7 @@ const focusSoon = (sel: string) => requestAnimationFrame(() => requestAnimationF
  */
 export default function BuilderGraph({ w, editable, issues }: Props) {
   const id = useId();
-  const navigate = useNavigate();
   const modules = useModules();
-  const { comment, openCount } = useComments();
   const [addingAt, setAddingAt] = useState<number | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
   const [overSlot, setOverSlot] = useState<number | null>(null);
@@ -88,9 +83,11 @@ export default function BuilderGraph({ w, editable, issues }: Props) {
     const dropping = dragId !== null && !isNoop(index);
     return (
       <div className={`slot${proctored ? ' is-proctored' : ''}${dropping ? ' is-droppable' : ''}${overSlot === index ? ' is-over' : ''}`} {...slotDrop(index)}>
-        {editable && !dragId && (
-          <button type="button" className="slot__add" aria-label={`Add ${where(index)}`} aria-expanded={addingAt === index}
-            data-slot={index} onClick={() => setAddingAt(addingAt === index ? null : index)}>
+        {!dragId && (
+          <button type="button" className="slot__add" aria-label={`Add ${where(index)}`} data-slot={index}
+            aria-expanded={editable ? addingAt === index : undefined} aria-disabled={!editable || undefined}
+            aria-describedby={!editable ? `${id}-hint` : undefined}
+            onClick={() => editable ? setAddingAt(addingAt === index ? null : index) : setSaid('Locked. Choose Unlock for edits to add a step.')}>
             <PlusIcon />
           </button>
         )}
@@ -116,7 +113,7 @@ export default function BuilderGraph({ w, editable, issues }: Props) {
         <p className="canvas__hint" id={`${id}-hint`}>
           {editable
             ? 'Choose + to add a module or checkpoint there. Drag a step onto a + to move it, or use its options button.'
-            : w.stage === 'program-review' ? 'Locked while the workflow is in review. Use the comment buttons to leave feedback on a step.' : 'Locked since Program review approved it. Use the comment buttons to leave feedback on a step.'}
+            : `${w.stage === 'program-review' ? 'Locked while the workflow is in review.' : 'Locked since Program review approved it. Choose Unlock for edits to change steps.'} To leave feedback on a step, open Comments and choose it under “Comment on”.`}
         </p>
 
         <div className="flow" aria-describedby={`${id}-hint`}>
@@ -129,13 +126,11 @@ export default function BuilderGraph({ w, editable, issues }: Props) {
               const problems = issueFor(s.id);
               const proctored = proctorAt >= 0 && i > proctorAt;
               const kindCls = s.kind === 'module' ? (m ? (m.kind === 'evaluative' ? 'eval' : 'content') : 'missing') : s.kind;
-              const menu = editable && (
-                <Menu label={`Options for ${name}, step ${i + 1}`} className="node__menu" items={[
-                  { label: 'Move up', disabled: i === 0, onSelect: () => move(s, i - 1, name) },
-                  { label: 'Move down', disabled: i === steps.length - 1, onSelect: () => move(s, i + 2, name) },
-                  ...(m ? [{ label: 'Open module', onSelect: () => navigate(contentRoutes.module(m.id)) }] : []),
-                  { label: 'Comment', onSelect: () => comment({ kind: 'step', id: s.id, label: name, tab: 'builder' }) },
-                  { label: 'Remove from workflow', divider: true, onSelect: () => {
+              const menu = (
+                <Menu label={`Options for ${name}, step ${i + 1}${editable ? '' : ' (locked)'}`} className="node__menu" items={[
+                  { label: 'Move up', disabled: !editable || i === 0, onSelect: () => move(s, i - 1, name) },
+                  { label: 'Move down', disabled: !editable || i === steps.length - 1, onSelect: () => move(s, i + 2, name) },
+                  { label: 'Remove from workflow', divider: true, disabled: !editable, onSelect: () => {
                     removeStep(w.id, s.id, name);
                     setSaid(`Removed ${name}.`);
                     focusSoon(`[data-slot="${i}"]`);
@@ -177,10 +172,7 @@ export default function BuilderGraph({ w, editable, issues }: Props) {
                     {problems.length > 0 && (
                       <span className="node__issue"><AlertIcon /> {problems[0].text}</span>
                     )}
-                    {menu || <CommentButton className="node__cbtn" target={{ kind: 'step', id: s.id, label: name, tab: 'builder' }} />}
-                    {menu && openCount({ kind: 'step', id: s.id }) > 0 && (
-                      <CommentButton className="node__cbtn node__cbtn--count" target={{ kind: 'step', id: s.id, label: name, tab: 'builder' }} />
-                    )}
+                    {menu}
                   </div>
                   {slot(i + 1)}
                 </li>

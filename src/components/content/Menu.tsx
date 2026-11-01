@@ -28,7 +28,9 @@ export default function Menu({ label, items, children, className = '', align = '
   const [active, setActive] = useState(0);
   const btn = useRef<HTMLButtonElement>(null);
   const list = useRef<HTMLUListElement>(null);
-  const enabled = items.map((it, i) => (it.disabled ? -1 : i)).filter((i) => i >= 0);
+  const live = items.map((it, i) => (it.disabled ? -1 : i)).filter((i) => i >= 0);
+  // When every item is unavailable (say, a locked workflow), still open so people can hear why.
+  const enabled = live.length ? live : items.map((_, i) => i);
 
   useEffect(() => {
     if (!open) return;

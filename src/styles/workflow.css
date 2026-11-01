@@ -98,7 +98,7 @@
 /* Each slot is a length of spine with a + in the middle. After the proctoring check, the spine becomes a ladder of rungs. */
 .slot { position: relative; display: grid; place-items: center; width: 100%; height: 48px; }
 .slot::before { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; margin-left: -1px; background: var(--rule-strong); }
-.slot.is-proctored::before { width: 10px; margin-left: -5px; background: var(--bg) repeating-linear-gradient(180deg, var(--ink) 0 2px, transparent 2px 6px); border-left: 1.5px solid var(--ink); border-right: 1.5px solid var(--ink); }
+.slot.is-proctored::before { box-sizing: border-box; width: 16px; margin-left: 0; transform: translateX(-50%); background: var(--bg) repeating-linear-gradient(180deg, var(--ink) 0 1.5px, transparent 1.5px 6px); border-left: 1.5px solid var(--ink); border-right: 1.5px solid var(--ink); }
 .flow > .slot:first-child::before { top: 50%; }
 .flow__list > li:last-child .slot::before { bottom: 50%; }
 .slot__add {
@@ -209,7 +209,7 @@
 .legend__sw--eval { background-image: repeating-linear-gradient(135deg, var(--ink) 0 1.6px, transparent 1.6px 5px); }
 .legend__sw--id { background-image: radial-gradient(circle, var(--ink) 1.25px, transparent 1.6px); background-size: 6px 6px; background-position: 1px 1px; }
 .legend__sw--checkpoint { background-image: repeating-linear-gradient(45deg, var(--ink) 0 1px, transparent 1px 5px), repeating-linear-gradient(135deg, var(--ink) 0 1px, transparent 1px 5px); }
-.legend__sw--proctor { width: 10px; height: 18px; border-radius: 0; border-top: 0; border-bottom: 0; border-width: 1.5px; background-image: repeating-linear-gradient(180deg, var(--ink) 0 2px, transparent 2px 6px); }
+.legend__sw--proctor { width: 16px; box-sizing: border-box; height: 18px; border-radius: 0; border-top: 0; border-bottom: 0; border-width: 1.5px; background-image: repeating-linear-gradient(180deg, var(--ink) 0 1.5px, transparent 1.5px 6px); }
 
 /* ---------- Settings panel ---------- */
 .wf-settings { border-left: 1px solid var(--rule); padding: 24px 24px 48px; min-height: 100%; }
@@ -335,3 +335,7 @@
   .wf-shell.has-comments { grid-template-columns: minmax(0, 1fr); position: relative; }
   .wf-shell.has-comments .cpanel { position: absolute; inset: 0 0 0 auto; width: min(400px, 100%); z-index: 9; box-shadow: -16px 0 40px -16px rgba(0, 0, 0, .25); }
 }
+
+/* Locked graphs keep the same controls, shown as unavailable */
+.slot__add[aria-disabled="true"] { cursor: not-allowed; border-style: dashed; border-color: var(--rule-strong); color: var(--ink-faint); background: var(--bg); }
+.slot__add[aria-disabled="true"]:hover { background: var(--bg); border-color: var(--ink-faint); color: var(--ink-soft); }
