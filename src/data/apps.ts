@@ -35,7 +35,7 @@ export const APPS: AppInfo[] = [
     host: 'assess.onlineassessments.app',
     audience: 'Candidates',
     summary: 'Where candidates sign in, take their assessments and see what comes next.',
-    status: 'coming-soon',
+    status: 'in-progress',
   },
   {
     id: 'hiring',
