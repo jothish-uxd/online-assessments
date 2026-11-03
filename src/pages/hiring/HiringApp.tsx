@@ -5,6 +5,8 @@ import AppBarEnd from '../../components/AppBarEnd';
 import { usePageTitle } from '../../components/usePageTitle';
 import { appById } from '../../data/apps';
 import { resetStore } from '../../data/store';
+import TalentPage from './TalentPage';
+import '../../styles/hiring.css';
 import '../../styles/content.css';
 import '../../styles/workflow.css';
 
@@ -16,7 +18,7 @@ const TABS = [
   { path: 'interviews', label: 'Interviews', about: 'Scheduled interviews, panels and feedback.' },
 ] as const;
 
-/** Internal ATS: the hiring system recruiters use. Tabs are empty for now. */
+/** Internal ATS: the hiring system recruiters use. */
 export default function HiringApp() {
   const app = appById('hiring');
   const { pathname, nav } = useFrameHistory();
@@ -44,7 +46,8 @@ export default function HiringApp() {
           <main id="main" className="ca-main" ref={main} data-scroll>
             <Routes>
               <Route index element={<Navigate to="jobs" replace />} />
-              {TABS.map((t) => <Route key={t.path} path={`${t.path}/*`} element={<Empty title={t.label} about={t.about} />} />)}
+              <Route path="talent/*" element={<TalentPage />} />
+              {TABS.filter((t) => t.path !== 'talent').map((t) => <Route key={t.path} path={`${t.path}/*`} element={<Empty title={t.label} about={t.about} />} />)}
               <Route path="*" element={<Navigate to="jobs" replace />} />
             </Routes>
           </main>

@@ -1,0 +1,78 @@
+/* ---------- Internal ATS: Talent ---------- */
+
+.tal-bulk { position: sticky; top: 0; z-index: 4; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin: 0 0 16px; padding: 10px 14px; border: 1px solid var(--rule); border-radius: 10px; background: var(--bg); }
+.tal-bulk__count { font-size: 13px; color: var(--ink-soft); }
+.tal-bulk__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+.tal-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
+.tal-toast { position: sticky; bottom: 16px; width: max-content; max-width: 100%; margin: 16px auto 0; padding: 10px 16px; border-radius: 10px; background: var(--ink); color: var(--on-ink); font-size: 14px; }
+
+.tal-card { border: 1px solid var(--rule-strong); border-radius: 14px; background: var(--bg); overflow: hidden; }
+.tal-card.is-picked { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.tal-card__head { display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto; gap: 14px; align-items: start; padding: 18px 20px 14px; }
+.tal-card__pick { display: grid; place-items: center; width: 28px; height: 44px; cursor: pointer; }
+.tal-card__pick input { width: 18px; height: 18px; margin: 0; accent-color: var(--ink); cursor: pointer; }
+.tal-avatar { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--bg-hover); border: 1px solid var(--rule-strong); font-family: var(--mono); font-size: 14px; font-weight: 600; }
+.tal-card__name { margin: 0; font-size: 18px; font-weight: 650; letter-spacing: -.015em; }
+.tal-card__pron { font-size: 13px; font-weight: 400; color: var(--ink-soft); }
+.tal-card__headline { margin: 2px 0 8px; font-size: 14px; color: var(--ink-soft); }
+.tal-card__meta { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; color: var(--ink-soft); }
+.tal-card__meta li { display: inline-flex; align-items: center; gap: 4px; }
+.tal-card__meta a { color: var(--ink); text-decoration-color: var(--rule-strong); text-underline-offset: 3px; }
+.tal-pin { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.4; }
+.tal-card__actions { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 8px; }
+.tal-count { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; margin-left: 4px; border-radius: 9px; background: var(--bg-hover); border: 1px solid var(--rule-strong); font-size: 11px; font-variant-numeric: tabular-nums; }
+@media (max-width: 900px) {
+  .tal-card__head { grid-template-columns: auto auto minmax(0, 1fr); }
+  .tal-card__actions { grid-column: 1 / -1; justify-content: flex-start; }
+}
+
+.tal-label { display: block; margin: 0 0 8px; font-size: 11.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-faint); }
+
+.tal-oa { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px 28px; align-items: center; margin: 0 20px; padding: 12px 16px; border: 1px solid var(--rule); border-radius: 10px; background: var(--bg-subtle); }
+.tal-oa .tal-label { margin: 0; }
+.tal-oa__main { display: grid; gap: 4px; }
+.tal-oa__band { display: inline-flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 650; }
+.tal-oa__score { font-size: 13px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.tal-oa__score strong { color: var(--ink); font-size: 15px; }
+.tal-oa__facts { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 0; font-size: 13px; }
+.tal-oa__facts dt { color: var(--ink-faint); font-size: 12px; }
+.tal-oa__facts dd { margin: 2px 0 0; }
+.tal-bars { display: inline-flex; align-items: flex-end; gap: 2px; height: 14px; }
+.tal-bars span { width: 4px; border: 1px solid var(--ink); border-radius: 1px; }
+.tal-bars span:nth-child(1) { height: 5px; } .tal-bars span:nth-child(2) { height: 8px; } .tal-bars span:nth-child(3) { height: 11px; } .tal-bars span:nth-child(4) { height: 14px; }
+.tal-bars .is-on { background: var(--ink); }
+@media (max-width: 760px) { .tal-oa { grid-template-columns: 1fr; } }
+
+.tal-cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; margin-top: 16px; border-top: 1px solid var(--rule); }
+.tal-cols > section { padding: 16px 20px; }
+.tal-cols > section + section { border-left: 1px solid var(--rule); }
+@media (max-width: 900px) { .tal-cols { grid-template-columns: 1fr; } .tal-cols > section + section { border-left: 0; border-top: 1px solid var(--rule); } }
+.tal-items { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.tal-items li { display: grid; gap: 2px; }
+.tal-items__title { font-size: 14px; font-weight: 550; line-height: 1.35; }
+.tal-items__sub { font-size: 12.5px; color: var(--ink-soft); }
+.tal-stage { justify-self: start; margin-top: 3px; padding: 1px 8px; border: 1px solid var(--ink); border-radius: 999px; font-size: 12px; font-weight: 500; }
+.tal-stage.is-closed { border-color: var(--rule-strong); border-style: dashed; color: var(--ink-soft); font-weight: 400; }
+.tal-more { margin: 8px 0 0; font-size: 12.5px; color: var(--ink-faint); }
+
+.tal-consider { padding: 16px 20px; border-top: 1px solid var(--rule); }
+.tal-consider dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px 24px; margin: 0; }
+.tal-consider dt { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-faint); }
+.tal-consider dd { margin: 2px 0 0; font-size: 13.5px; line-height: 1.4; }
+.tal-consider .is-flag dd { font-weight: 600; }
+.tal-flag { display: inline-grid; place-items: center; width: 15px; height: 15px; border-radius: 50%; background: var(--ink); color: var(--on-ink); font-size: 10px; font-weight: 700; }
+.tal-skills { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 0; padding: 0; }
+.tal-skills li { padding: 2px 9px; border: 1px solid var(--rule-strong); border-radius: 6px; font-size: 12.5px; }
+
+.tal-card__foot { display: flex; flex-wrap: wrap; gap: 4px 18px; padding: 10px 20px; border-top: 1px solid var(--rule); background: var(--bg-subtle); font-size: 12.5px; color: var(--ink-soft); }
+
+/* Messages and dialogs */
+.tal-thread { list-style: none; margin: 0 0 20px; padding: 0; display: grid; gap: 12px; }
+.tal-msg { display: grid; gap: 4px; padding: 12px 14px; border: 1px solid var(--rule); border-radius: 10px; max-width: 92%; }
+.tal-msg--recruiter { justify-self: end; background: var(--bg-subtle); }
+.tal-msg--candidate { justify-self: start; border-color: var(--ink); }
+.tal-msg--system { justify-self: center; max-width: 100%; border-style: dashed; }
+.tal-msg__meta { font-size: 12px; color: var(--ink-soft); }
+.tal-msg__subj { font-size: 13.5px; font-weight: 600; }
+.tal-msg p { margin: 0; font-size: 14px; line-height: 1.5; }
+.tal-warn { margin: 0; padding: 10px 12px; border-left: 3px solid var(--ink); background: var(--bg-subtle); font-size: 13.5px; line-height: 1.45; }
