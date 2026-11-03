@@ -53,7 +53,7 @@ export const APPS: AppInfo[] = [
     host: 'proctor.onlineassessments.app',
     audience: 'Proctoring reviewers',
     summary: 'Where each assessment session is reviewed for integrity before results are trusted.',
-    status: 'coming-soon',
+    status: 'in-progress',
   },
 ];
 
