@@ -5,6 +5,7 @@ import OverviewPage from './pages/OverviewPage';
 import ComingSoonApp from './pages/ComingSoonApp';
 import ContentApp from './pages/content/ContentApp';
 import CandidateApp from './pages/candidate/CandidateApp';
+import HiringApp from './pages/hiring/HiringApp';
 import { APPS } from './data/apps';
 
 export default function App() {
@@ -17,6 +18,7 @@ export default function App() {
         <Route path="/overview" element={<OverviewPage />} />
         <Route path="/assessment-content/*" element={<ContentApp />} />
         <Route path="/candidate-website/*" element={<CandidateApp />} />
+        <Route path="/hiring-system/*" element={<HiringApp />} />
         {APPS.filter((a) => a.status === 'coming-soon').map((a) => (
           // key per app so each frame starts its own Back / Forward history
           <Route key={a.id} path={`${a.path}/*`} element={<ComingSoonApp key={a.id} id={a.id} />} />

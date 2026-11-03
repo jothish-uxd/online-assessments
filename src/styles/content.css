@@ -461,3 +461,9 @@ fieldset:disabled .correct-toggle input { cursor: default; }
 .draft-bar { margin: 4px 0 10px; padding: 10px 14px; border: 1px solid var(--rule-strong); border-left: 3px solid var(--ink); border-radius: 8px; font-size: 13.5px; line-height: 1.5; color: var(--ink-soft); max-width: 860px; }
 .draft-bar strong { color: var(--ink); }
 .ca-head__actions .save-state { font-size: 12.5px; color: var(--ink-faint); }
+
+/* Internal ATS help button (same round control as the avatar) */
+.hire-help .menu__button { display: grid; place-items: center; border: 1px solid var(--rule); color: var(--ink-soft); }
+.hire-help .menu__button:hover { color: var(--ink); background: var(--bg-hover); }
+.hire-help svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; }
+.hire-empty { max-width: 560px; }

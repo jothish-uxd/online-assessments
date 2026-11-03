@@ -44,7 +44,7 @@ export const APPS: AppInfo[] = [
     host: 'hire.onlineassessments.app',
     audience: 'Recruiters and hiring managers',
     summary: 'Where recruiters send assessments to candidates and read their results.',
-    status: 'coming-soon',
+    status: 'in-progress',
   },
   {
     id: 'proctoring',
