@@ -1,10 +1,13 @@
 import { useEffect, useId, useState } from 'react';
+import { Navigate, NavLink, Route, Routes } from 'react-router-dom';
 import Dialog from '../../components/content/Dialog';
 import Menu from '../../components/content/Menu';
 import Select from '../../components/Select';
 import { usePageTitle } from '../../components/usePageTitle';
 import { person, useMe } from '../../data/content/people';
 import { OPEN_JOBS, addToJob, inviteToApply, sendMessage, sendOa, useTalent, type Talent } from '../../data/hiring/talent';
+
+const BASE = '/hiring-system';
 
 type Action = { kind: 'messages' | 'add' | 'invite' | 'oa'; ids: string[] } | null;
 
@@ -15,6 +18,53 @@ const initials = (n: string) => n.split(' ').map((p) => p[0]).slice(0, 2).join('
 /** Talent: people a recruiter can reach out to. Select cards to act on several at once. */
 export default function TalentPage() {
   const h = usePageTitle('Talent · Internal ATS');
+  return (
+    <div className="ca-page">
+      <header className="ca-head tal-head">
+        <div>
+          <h1 ref={h} tabIndex={-1} className="ca-title">Talent</h1>
+          <p className="ca-sub">Everyone in the ATS you might hire: grouped into pools, or listed one by one as prospects.</p>
+        </div>
+      </header>
+      <nav className="wf-tabs tal-tabs" aria-label="Talent">
+        <NavLink to={`${BASE}/talent/pool`} className="ca-tab">Pool</NavLink>
+        <NavLink to={`${BASE}/talent/prospects`} className="ca-tab">Prospects</NavLink>
+      </nav>
+      <Routes>
+        <Route index element={<Navigate to="pool" replace />} />
+        <Route path="pool" element={<Pools />} />
+        <Route path="prospects" element={<Prospects />} />
+        <Route path="*" element={<Navigate to="pool" replace />} />
+      </Routes>
+    </div>
+  );
+}
+
+/** Pools: buckets of talent. Empty for now; a table of pools comes later. */
+function Pools() {
+  return (
+    <section className="tal-section" aria-labelledby="tal-pools-h">
+      <h2 id="tal-pools-h" className="visually-hidden">Pool</h2>
+      <div className="empty tal-empty">
+        <p className="empty__title">No pools yet</p>
+        <p>Pools are buckets of talent. They’ll be listed here in a table, with how many people are in each.</p>
+        <dl className="tal-pooltypes">
+          <div>
+            <dt>Your pools</dt>
+            <dd>Any grouping that helps you, not tied to a role, level, location or title. For example: “Former Rebel Alliance pilots”, “Strong OA results, not yet interviewed”, or “Ask again in spring”.</dd>
+          </div>
+          <div>
+            <dt>Suggested by the system</dt>
+            <dd>One pool per job we’re actively hiring for, kept up to date automatically with people who qualify and aren’t already hired or interviewing. For example: Starfighter Pilot L4, Flight Instructor L5, Hangar Mechanic L3, Intelligence Analyst L5, Squadron Leader L6.</dd>
+          </div>
+        </dl>
+      </div>
+    </section>
+  );
+}
+
+/** Prospects: individual people, as cards you can select and act on. */
+function Prospects() {
   const talent = useTalent();
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const [action, setAction] = useState<Action>(null);
@@ -26,14 +76,9 @@ export default function TalentPage() {
   const toggle = (id: string, on: boolean) => setPicked((p) => { const n = new Set(p); if (on) n.add(id); else n.delete(id); return n; });
 
   return (
-    <div className="ca-page">
-      <header className="ca-head">
-        <div>
-          <h1 ref={h} tabIndex={-1} className="ca-title">Talent</h1>
-          <p className="ca-sub">People you’ve sourced or who’ve shown interest. Select people to act on several at once.</p>
-        </div>
-      </header>
-
+    <section className="tal-section" aria-labelledby="tal-pros-h">
+      <h2 id="tal-pros-h" className="visually-hidden">Prospects</h2>
+      <p className="tal-intro">People you’ve sourced or who’ve shown interest. Select people to act on several at once.</p>
       <div className="tal-bulk" role="toolbar" aria-label="Selected people">
         <label className="check">
           <input type="checkbox" checked={all} ref={(el) => { if (el) el.indeterminate = some; }}
@@ -64,7 +109,7 @@ export default function TalentPage() {
       {action?.kind === 'oa' && <OaDialog people={talent.filter((t) => action.ids.includes(t.id))} onClose={() => setAction(null)} onDone={(m) => { setAction(null); setSaid(m); }} />}
       <span className="visually-hidden" role="status">{said}</span>
       {said && <p className="tal-toast" aria-hidden="true">{said}</p>}
-    </div>
+    </section>
   );
 }
 

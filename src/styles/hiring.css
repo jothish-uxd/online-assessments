@@ -76,3 +76,13 @@
 .tal-msg__subj { font-size: 13.5px; font-weight: 600; }
 .tal-msg p { margin: 0; font-size: 14px; line-height: 1.5; }
 .tal-warn { margin: 0; padding: 10px 12px; border-left: 3px solid var(--ink); background: var(--bg-subtle); font-size: 13.5px; line-height: 1.45; }
+
+/* Talent sub-tabs */
+.tal-head { margin-bottom: 0; }
+.tal-tabs { margin: 8px 0 20px; border-bottom: 1px solid var(--rule); }
+.tal-intro { margin: 0 0 14px; font-size: 14px; color: var(--ink-soft); }
+.tal-empty { max-width: 760px; border-top: 0; padding-top: 8px; }
+.tal-pooltypes { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin: 20px 0 0; }
+.tal-pooltypes > div { padding: 14px 16px; border: 1px dashed var(--rule-strong); border-radius: 10px; }
+.tal-pooltypes dt { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.tal-pooltypes dd { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--ink-soft); }
