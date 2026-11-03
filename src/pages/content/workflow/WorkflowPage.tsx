@@ -233,8 +233,7 @@ function Editor({ w }: { w: Workflow }) {
             )}
 
             <div className="wf-progress">
-              <h2 className="wf-progress__label" id={`${id}-prog`}>Workflow progress</h2>
-              <ol className="stepper" aria-labelledby={`${id}-prog`}>
+              <ol className="stepper" aria-label="Workflow progress">
                 {STAGES.map((s, i) => (
                   <li key={s.id} className={i < si ? 'is-done' : i === si ? 'is-current' : ''} aria-current={i === si ? 'step' : undefined}>
                     <span className="stepper__dot" aria-hidden="true">{i < si && <CheckIcon />}</span>
