@@ -64,7 +64,36 @@ export function createWorkflow(name: string): Workflow {
   return w;
 }
 
+/**
+ * Copy a workflow as its next version: same name and ID code, version one
+ * higher than any existing version of it, back at the start of the progress
+ * wizard. Reviews and comments stay with the original; test results are
+ * cleared so the copy is tested on its own.
+ */
+export function duplicateWorkflow(id: string): Workflow | undefined {
+  const src = all().find((w) => w.id === id);
+  if (!src) return;
+  const stamp = now();
+  const version = Math.max(...all().filter((w) => w.code === src.code).map((w) => w.version)) + 1;
+  const copy: Workflow = {
+    ...structuredClone(src),
+    id: uid('w'), version, stage: 'build', dirty: false, reviews: [], comments: [],
+    testPlan: src.testPlan ? {
+      ...structuredClone(src.testPlan),
+      suites: src.testPlan.suites.map((su) => ({ ...su, cases: su.cases.map((c) => ({ ...c, version, result: { tester: '', outcome: 'not-tested' as const, notes: '' } })) })),
+    } : null,
+    created: stamp, edited: stamp,
+    history: [{ ...stamp, action: `Created version ${version} from version ${src.version}` }],
+  };
+  put(KEY, [copy, ...all()]);
+  return copy;
+}
+
+/** Live workflows are serving candidates, so they can't be deleted. */
+export const canDelete = (w: Workflow) => w.stage !== 'live';
+
 export function deleteWorkflow(id: string) {
+  if (all().find((w) => w.id === id)?.stage === 'live') return;
   put(KEY, all().filter((w) => w.id !== id).map((w) => ({ ...w, settings: { ...w.settings, equivalent: w.settings.equivalent.filter((e) => e !== id) } })));
 }
 

@@ -1,5 +1,5 @@
 import { useId, useMemo, useState } from 'react';
-import { Link, NavLink, useNavigate, useParams } from 'react-router-dom';
+import { Link, NavLink, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { usePageTitle } from '../../../components/usePageTitle';
 import Dialog from '../../../components/content/Dialog';
 import Menu from '../../../components/content/Menu';
@@ -11,7 +11,7 @@ import { PEOPLE, person, setMe, useMe } from '../../../data/content/people';
 import { when } from '../../../data/content/format';
 import { rollUp } from '../../../data/content/testplan';
 import {
-  STAGES, decideReview, deleteWorkflow, lastDecision, openRound, requestReview, saveVersion, setStage, stageIndex,
+  STAGES, canDelete, decideReview, deleteWorkflow, duplicateWorkflow, lastDecision, openRound, requestReview, saveVersion, setStage, stageIndex,
   unlockWorkflow, useWorkflows, validate, withdrawReview,
 } from '../../../data/content/workflows';
 import type { CommentTarget, PersonId, Stage, Workflow } from '../../../data/content/types';
@@ -64,6 +64,8 @@ function Editor({ w }: { w: Workflow }) {
   const h = usePageTitle(w.name);
   const id = useId();
   const navigate = useNavigate();
+  const location = useLocation() as { state?: { said?: string } };
+  const workflows = useWorkflows();
   const modules = useModules();
   const me = useMe();
   const [showIssues, setShowIssues] = useState(false);
@@ -71,7 +73,7 @@ function Editor({ w }: { w: Workflow }) {
   const [requesting, setRequesting] = useState(false);
   const [deciding, setDeciding] = useState<'approved' | 'changes' | null>(null);
   const [unlocking, setUnlocking] = useState(false);
-  const [said, setSaid] = useState('');
+  const [said, setSaid] = useState(location.state?.said ?? '');
   const [commentsOpen, setCommentsOpen] = useStored<boolean>('content:ui:comments-open', () => false);
   const [focus, setFocus] = useState<CommentTarget | null>(null);
 
@@ -167,7 +169,13 @@ function Editor({ w }: { w: Workflow }) {
                     aria-describedby={nextBlocked ? `${id}-why` : undefined} onClick={advance}>{next.button}</button>
                 )}
                 <Menu label="More workflow actions" className="wf-more" items={[
-                  { label: 'Delete workflow', onSelect: () => setDeleting(true) },
+                  { label: `Duplicate as version ${Math.max(...workflows.filter((x) => x.code === w.code).map((x) => x.version)) + 1}`, onSelect: () => {
+                    const c = duplicateWorkflow(w.id);
+                    if (c) navigate(contentRoutes.workflow(c.id), { state: { said: `Created version ${c.version} of ${c.name}. It starts back in Build.` } });
+                  } },
+                  canDelete(w)
+                    ? { label: 'Delete workflow', divider: true, onSelect: () => setDeleting(true) }
+                    : { label: 'Delete workflow (not available while live)', divider: true, disabled: true, onSelect: () => {} },
                 ]}>
                   <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="1.6" /><circle cx="12" cy="12" r="1.6" /><circle cx="18" cy="12" r="1.6" /></svg>
                 </Menu>
