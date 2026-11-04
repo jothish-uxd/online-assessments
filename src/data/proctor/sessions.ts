@@ -1,3 +1,5 @@
+import { generatedSession } from '../hiring/applicants';
+
 /*
   Sample proctoring sessions for the Proctoring report. Placeholder data:
   enough to lay out the queues and the session detail before the real model.
@@ -108,4 +110,4 @@ export const MATCH_TEXT: Record<IdMatch, string> = { match: 'Same person', misma
 const RANK: Record<Risk, number> = { high: 0, medium: 1, low: 2 };
 export const byRisk = (a: Session, b: Session) => RANK[a.risk] - RANK[b.risk] || b.events.length - a.events.length;
 export const byNewest = (a: Session, b: Session) => b.submitted.localeCompare(a.submitted);
-export const sessionById = (id?: string) => SESSIONS.find((s) => s.id === id);
+export const sessionById = (id?: string) => SESSIONS.find((s) => s.id === id) ?? generatedSession(id);

@@ -121,3 +121,11 @@
 .oa-result.is-fail span { border-style: dashed; color: var(--ink); }
 .oa-proc { font-weight: 500; }
 .job-ctable td:last-child { text-align: right; white-space: nowrap; }
+.job-filter { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; }
+.job-filter__btn { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border: 1px solid var(--rule-strong); border-radius: 999px; background: var(--bg); color: var(--ink-soft); font: inherit; font-size: 13px; cursor: pointer; }
+.job-filter__btn:hover { color: var(--ink); background: var(--bg-hover); }
+.job-filter__btn[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--on-ink); }
+.job-filter__n { font-variant-numeric: tabular-nums; font-size: 12px; opacity: .8; }
+.oa-state { display: inline-block; margin-right: 8px; padding: 0 6px; border: 1px solid var(--ink); border-radius: 4px; font-size: 11px; font-weight: 600; letter-spacing: .03em; text-transform: uppercase; vertical-align: 1px; }
+.oa-state.is-pending { border-style: dashed; font-weight: 500; }
+.job-pager { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-top: 12px; font-size: 13px; color: var(--ink-soft); }

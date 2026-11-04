@@ -1,8 +1,9 @@
+import { useState } from 'react';
 import { Link, Navigate, Route, Routes, useParams } from 'react-router-dom';
 import { usePageTitle } from '../../components/usePageTitle';
 import { JOBS, STAGES, inPipeline, jobById, type Job } from '../../data/hiring/jobs';
-import { candidatesFor, sessionFor, type JobCandidate } from '../../data/hiring/applicants';
-import { STATUS_TEXT } from '../../data/proctor/sessions';
+import { candidatesFor, type JobCandidate } from '../../data/hiring/applicants';
+import { STATUS_TEXT, sessionById } from '../../data/proctor/sessions';
 import { RiskBadge, sessionPath } from '../proctor/bits';
 
 const BASE = '/hiring-system/jobs';
@@ -133,33 +134,62 @@ function JobDetail({ j }: { j: Job }) {
 
 const short = (d: string) => new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(new Date(`${d}T12:00:00`));
 
-/** Candidates on the job: their stage, OA result and, when proctored, the way into the proctoring review. */
+type Filter = 'All' | (typeof STAGES)[number];
+const ORDER = [...STAGES].reverse();
+const PAGE = 25;
+const sessionFor = (c: JobCandidate) => sessionById(c.oa.sessionId);
+
+/** Every candidate on the job, filterable by stage, with their OA status and a way into proctoring. */
 function Candidates({ j }: { j: Job }) {
-  const rows = candidatesFor(j.reqId);
-  const done = rows.filter((c) => c.oa.state === 'completed');
-  const passed = done.filter((c) => c.oa.pass);
-  const waiting = done.filter((c) => { const s = sessionFor(c); return s && (s.status === 'needs-review' || s.status === 'in-review'); });
+  const all = candidatesFor(j.reqId);
+  const [filter, setFilter] = useState<Filter>('Assessment');
+  const [page, setPage] = useState(0);
+  const rows = (filter === 'All' ? [...all].sort((a, b) => ORDER.indexOf(a.stage) - ORDER.indexOf(b.stage)) : all.filter((c) => c.stage === filter));
+  const shown = rows.slice(page * PAGE, page * PAGE + PAGE);
+  const taken = rows.filter((c) => c.oa.state === 'completed');
+  const pending = rows.filter((c) => c.oa.state === 'invited' || c.oa.state === 'started');
+  const pick = (f: Filter) => { setFilter(f); setPage(0); };
   return (
     <section className="job-cands" aria-labelledby="job-cands">
       <div className="section-head">
-        <h2 id="job-cands" className="section-title">Candidates <span className="muted">{rows.length}</span></h2>
+        <h2 id="job-cands" className="section-title">Candidates <span className="muted">{all.length}</span></h2>
+      </div>
+      <div className="job-filter" role="group" aria-label="Show candidates by stage">
+        {(['All', ...STAGES] as Filter[]).map((f) => {
+          const n = f === 'All' ? all.length : all.filter((c) => c.stage === f).length;
+          return (
+            <button key={f} type="button" className="job-filter__btn" aria-pressed={filter === f} onClick={() => pick(f)}>
+              {f} <span className="job-filter__n">{n}</span>
+            </button>
+          );
+        })}
       </div>
       {rows.length === 0 ? (
-        <div className="empty"><p className="empty__title">No candidates yet</p><p>People appear here when they apply or a recruiter adds them.</p></div>
+        <div className="empty"><p className="empty__title">No one at this stage</p><p>Candidates appear here as they move through the pipeline.</p></div>
       ) : (
         <>
-          <p className="job-cands__sum">{done.length} took the OA · {passed.length} passed · {waiting.length} waiting on proctoring review</p>
+          <p className="job-cands__sum" aria-live="polite">
+            {rows.length} {filter === 'All' ? 'candidates' : `in ${filter}`}
+            {j.workflow && <> · OA taken by {taken.length} · pending for {pending.length}{rows.length - taken.length - pending.length > 0 ? ` · not sent to ${rows.length - taken.length - pending.length}` : ''}</>}
+          </p>
           <div className="table-wrap">
             <table className="table job-ctable">
-              <caption className="visually-hidden">Candidates on {j.title}, with their online assessment results</caption>
+              <caption className="visually-hidden">{filter === 'All' ? 'All candidates' : `Candidates in ${filter}`} on {j.title}, with their online assessment status</caption>
               <thead>
                 <tr><th scope="col">Candidate</th><th scope="col">Stage</th><th scope="col">Online assessment</th><th scope="col">Proctoring</th><th scope="col"><span className="visually-hidden">Details</span></th></tr>
               </thead>
               <tbody>
-                {rows.map((c) => <CandidateRow key={c.id} c={c} j={j} />)}
+                {shown.map((c) => <CandidateRow key={c.id + c.name} c={c} j={j} />)}
               </tbody>
             </table>
           </div>
+          {rows.length > PAGE && (
+            <nav className="job-pager" aria-label="Candidate pages">
+              <button type="button" className="btn btn--secondary btn--sm" aria-disabled={page === 0 || undefined} onClick={() => page > 0 && setPage(page - 1)}>Previous</button>
+              <span>{page * PAGE + 1}–{Math.min(rows.length, page * PAGE + PAGE)} of {rows.length}</span>
+              <button type="button" className="btn btn--secondary btn--sm" aria-disabled={(page + 1) * PAGE >= rows.length || undefined} onClick={() => (page + 1) * PAGE < rows.length && setPage(page + 1)}>Next</button>
+            </nav>
+          )}
         </>
       )}
     </section>
@@ -173,16 +203,17 @@ function CandidateRow({ c, j }: { c: JobCandidate; j: Job }) {
   return (
     <tr>
       <th scope="row">{c.name}<span className="cell-sub mono">{c.id}</span></th>
-      <td><span className={`tal-stage${c.stage === 'Not selected' ? ' is-closed' : ''}`}>{c.stage}</span><span className="cell-sub">Applied {short(c.applied)}</span></td>
+      <td><span className="tal-stage">{c.stage}</span><span className="cell-sub">Applied {short(c.applied)}</span></td>
       <td>
         {o.state === 'completed' ? (
           <>
+            <span className="oa-state">Taken</span>
             <span className={`oa-result ${o.pass ? 'is-pass' : 'is-fail'}`}><span aria-hidden="true">{o.pass ? '✓' : '✕'}</span>{o.pass ? 'Passed' : 'Not passed'}</span>
             <span className="cell-sub">{o.score}/{o.outOf} · {short(o.date!)}{o.pass && open ? ' · on hold until reviewed' : ''}</span>
           </>
-        ) : o.state === 'started' ? <>In progress<span className="cell-sub">Started {short(o.date!)}</span></>
-          : o.state === 'invited' ? <>Invited<span className="cell-sub">Sent {short(o.date!)}, not started</span></>
-          : <span className="muted">Not sent</span>}
+        ) : o.state === 'started' ? <><span className="oa-state is-pending">Pending</span>In progress<span className="cell-sub">Started {short(o.date!)}</span></>
+          : o.state === 'invited' ? <><span className="oa-state is-pending">Pending</span>Invited<span className="cell-sub">Sent {short(o.date!)}, not started</span></>
+          : <span className="muted">{j.workflow ? 'Not sent' : 'No OA for this job'}</span>}
       </td>
       <td>
         {s ? (
