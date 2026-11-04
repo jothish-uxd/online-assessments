@@ -86,3 +86,27 @@
 .tal-pooltypes > div { padding: 14px 16px; border: 1px dashed var(--rule-strong); border-radius: 10px; }
 .tal-pooltypes dt { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
 .tal-pooltypes dd { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--ink-soft); }
+
+/* ---------- Jobs ---------- */
+.job-status { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 500; white-space: nowrap; }
+.job-status > span { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid var(--ink); }
+.job-status--open > span { background: var(--ink); }
+.job-status--on-hold > span { background: linear-gradient(90deg, var(--ink) 50%, transparent 50%); }
+.job-status--filled > span, .job-status--closed > span { border-style: dashed; }
+.job-status--filled, .job-status--closed { color: var(--ink-soft); }
+.job-table th[scope="row"] { font-weight: 500; }
+.job-table .num { min-width: 64px; }
+.job-funnel { display: inline-flex; align-items: flex-end; gap: 3px; height: 30px; }
+.job-funnel span { width: 7px; background: var(--ink); border-radius: 1px; opacity: .85; }
+.job-pipe { list-style: none; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); margin: 8px 0 28px; padding: 0; border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; }
+.job-pipe li { display: grid; gap: 2px; padding: 14px 16px; position: relative; }
+.job-pipe li + li { border-left: 1px solid var(--rule); }
+.job-pipe__n { font-size: 24px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.job-pipe__label { font-size: 12.5px; color: var(--ink-soft); }
+@media (max-width: 760px) { .job-pipe { grid-template-columns: repeat(3, minmax(0, 1fr)); } .job-pipe li:nth-child(4) { border-left: 0; } .job-pipe li:nth-child(n+4) { border-top: 1px solid var(--rule); } }
+.job-grid { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 24px; align-items: start; }
+@media (max-width: 1000px) { .job-grid { grid-template-columns: 1fr; } }
+.job-side { display: grid; gap: 16px; }
+.job-ph { padding: 16px; border: 1px dashed var(--rule-strong); border-radius: 12px; display: grid; gap: 8px; min-height: 80px; align-content: start; }
+.job-ph h2 { margin: 0; }
+.job-grid > .job-ph { min-height: 320px; }

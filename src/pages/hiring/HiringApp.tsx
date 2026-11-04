@@ -6,6 +6,8 @@ import { usePageTitle } from '../../components/usePageTitle';
 import { appById } from '../../data/apps';
 import { resetStore } from '../../data/store';
 import TalentPage from './TalentPage';
+import JobsPage from './JobsPage';
+import '../../styles/proctor.css';
 import '../../styles/hiring.css';
 import '../../styles/content.css';
 import '../../styles/workflow.css';
@@ -47,7 +49,8 @@ export default function HiringApp() {
             <Routes>
               <Route index element={<Navigate to="jobs" replace />} />
               <Route path="talent/*" element={<TalentPage />} />
-              {TABS.filter((t) => t.path !== 'talent').map((t) => <Route key={t.path} path={`${t.path}/*`} element={<Empty title={t.label} about={t.about} />} />)}
+              <Route path="jobs/*" element={<JobsPage />} />
+              {TABS.filter((t) => t.path !== 'talent' && t.path !== 'jobs').map((t) => <Route key={t.path} path={`${t.path}/*`} element={<Empty title={t.label} about={t.about} />} />)}
               <Route path="*" element={<Navigate to="jobs" replace />} />
             </Routes>
           </main>
