@@ -1,6 +1,9 @@
 import { Link, Navigate, Route, Routes, useParams } from 'react-router-dom';
 import { usePageTitle } from '../../components/usePageTitle';
 import { JOBS, STAGES, inPipeline, jobById, type Job } from '../../data/hiring/jobs';
+import { candidatesFor, sessionFor, type JobCandidate } from '../../data/hiring/applicants';
+import { STATUS_TEXT } from '../../data/proctor/sessions';
+import { RiskBadge, sessionPath } from '../proctor/bits';
 
 const BASE = '/hiring-system/jobs';
 const day = (d: string) => new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(`${d}T12:00:00`));
@@ -112,7 +115,7 @@ function JobDetail({ j }: { j: Job }) {
       </ol>
 
       <div className="job-grid">
-        <section className="job-ph" aria-labelledby="job-cands"><h2 id="job-cands" className="section-title">Candidates</h2><p className="pr-placeholder">Placeholder · candidates by stage, with move, reject and message actions</p></section>
+        <Candidates j={j} />
         <aside className="job-side" aria-label="About this job">
           <dl className="kv kv--stack">
             <div><dt>Recruiter</dt><dd>{j.recruiter}</dd></div>
@@ -125,5 +128,74 @@ function JobDetail({ j }: { j: Job }) {
         </aside>
       </div>
     </div>
+  );
+}
+
+const short = (d: string) => new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(new Date(`${d}T12:00:00`));
+
+/** Candidates on the job: their stage, OA result and, when proctored, the way into the proctoring review. */
+function Candidates({ j }: { j: Job }) {
+  const rows = candidatesFor(j.reqId);
+  const done = rows.filter((c) => c.oa.state === 'completed');
+  const passed = done.filter((c) => c.oa.pass);
+  const waiting = done.filter((c) => { const s = sessionFor(c); return s && (s.status === 'needs-review' || s.status === 'in-review'); });
+  return (
+    <section className="job-cands" aria-labelledby="job-cands">
+      <div className="section-head">
+        <h2 id="job-cands" className="section-title">Candidates <span className="muted">{rows.length}</span></h2>
+      </div>
+      {rows.length === 0 ? (
+        <div className="empty"><p className="empty__title">No candidates yet</p><p>People appear here when they apply or a recruiter adds them.</p></div>
+      ) : (
+        <>
+          <p className="job-cands__sum">{done.length} took the OA · {passed.length} passed · {waiting.length} waiting on proctoring review</p>
+          <div className="table-wrap">
+            <table className="table job-ctable">
+              <caption className="visually-hidden">Candidates on {j.title}, with their online assessment results</caption>
+              <thead>
+                <tr><th scope="col">Candidate</th><th scope="col">Stage</th><th scope="col">Online assessment</th><th scope="col">Proctoring</th><th scope="col"><span className="visually-hidden">Details</span></th></tr>
+              </thead>
+              <tbody>
+                {rows.map((c) => <CandidateRow key={c.id} c={c} j={j} />)}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+    </section>
+  );
+}
+
+function CandidateRow({ c, j }: { c: JobCandidate; j: Job }) {
+  const s = sessionFor(c);
+  const open = s && (s.status === 'needs-review' || s.status === 'in-review');
+  const o = c.oa;
+  return (
+    <tr>
+      <th scope="row">{c.name}<span className="cell-sub mono">{c.id}</span></th>
+      <td><span className={`tal-stage${c.stage === 'Not selected' ? ' is-closed' : ''}`}>{c.stage}</span><span className="cell-sub">Applied {short(c.applied)}</span></td>
+      <td>
+        {o.state === 'completed' ? (
+          <>
+            <span className={`oa-result ${o.pass ? 'is-pass' : 'is-fail'}`}><span aria-hidden="true">{o.pass ? '✓' : '✕'}</span>{o.pass ? 'Passed' : 'Not passed'}</span>
+            <span className="cell-sub">{o.score}/{o.outOf} · {short(o.date!)}{o.pass && open ? ' · on hold until reviewed' : ''}</span>
+          </>
+        ) : o.state === 'started' ? <>In progress<span className="cell-sub">Started {short(o.date!)}</span></>
+          : o.state === 'invited' ? <>Invited<span className="cell-sub">Sent {short(o.date!)}, not started</span></>
+          : <span className="muted">Not sent</span>}
+      </td>
+      <td>
+        {s ? (
+          <>{open ? <RiskBadge risk={s.risk} /> : <span className="oa-proc">{STATUS_TEXT[s.status]}</span>}<span className="cell-sub">{open ? STATUS_TEXT[s.status] : `${s.events.length} flag${s.events.length === 1 ? '' : 's'}`}</span></>
+        ) : o.state === 'completed' ? <span className="muted">Not proctored</span> : <span className="muted">—</span>}
+      </td>
+      <td>
+        {s && (
+          <Link to={sessionPath(s.id)} state={{ from: { to: `${BASE}/${j.reqId}`, label: `${j.title} in Internal ATS` } }} className="btn btn--secondary btn--sm">
+            Details<span className="visually-hidden"> of {c.name}’s proctored session</span>
+          </Link>
+        )}
+      </td>
+    </tr>
   );
 }

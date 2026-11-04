@@ -110,3 +110,14 @@
 .job-ph { padding: 16px; border: 1px dashed var(--rule-strong); border-radius: 12px; display: grid; gap: 8px; min-height: 80px; align-content: start; }
 .job-ph h2 { margin: 0; }
 .job-grid > .job-ph { min-height: 320px; }
+.job-cands { min-width: 0; }
+.job-cands__sum { margin: -4px 0 8px; font-size: 13px; color: var(--ink-soft); }
+.job-ctable th[scope="row"] { font-weight: 500; }
+.job-ctable .tal-stage { display: inline-block; margin: 0; }
+.oa-result { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+.oa-result span { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--ink); font-size: 11px; }
+.oa-result.is-pass span { background: var(--ink); color: var(--on-ink); }
+.oa-result.is-fail { font-weight: 500; color: var(--ink-soft); }
+.oa-result.is-fail span { border-style: dashed; color: var(--ink); }
+.oa-proc { font-weight: 500; }
+.job-ctable td:last-child { text-align: right; white-space: nowrap; }

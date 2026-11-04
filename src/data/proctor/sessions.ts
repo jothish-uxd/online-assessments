@@ -70,6 +70,11 @@ export const SESSIONS: Session[] = [
     ],
   },
   {
+    id: 's-wedge', candidate: 'Wedge Antilles', candidateId: 'TAL-20417', job: 'Starfighter Pilot L4', reqId: 'REQ-4471', workflow: 'Starfighter Pilot L4',
+    submitted: '2026-10-21T17:30:00Z', minutes: 26, risk: 'low', status: 'cleared', idMatch: 'match',
+    events: [ev(980, 'Looked away from screen', 'Glanced at a wall chronometer for 3 seconds', 0.38)],
+  },
+  {
     id: 's-rose', candidate: 'Rose Tico', candidateId: 'CAND-48101', job: 'Hangar Mechanic L3', reqId: 'REQ-4502', workflow: 'Hangar Mechanic L3',
     submitted: '2026-11-02T15:12:00Z', minutes: 44, risk: 'low', status: 'cleared', idMatch: 'match',
     events: [ev(1500, 'Looked away from screen', 'Brief glance to the side', 0.42)],

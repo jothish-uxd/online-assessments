@@ -64,3 +64,5 @@
 
 .pr-events tr.is-picked td, .pr-events tr.is-picked th { background: var(--bg-hover); }
 .pr-events tr.is-picked td:first-child { box-shadow: inset 3px 0 0 var(--ink); padding-left: 8px; }
+.pr-from { margin: 0 0 12px; font-size: 13.5px; }
+.pr-from a { color: var(--ink); text-underline-offset: 3px; text-decoration-color: var(--rule-strong); }

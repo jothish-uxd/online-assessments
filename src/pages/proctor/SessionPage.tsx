@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { usePageTitle } from '../../components/usePageTitle';
 import { useCaptures } from '../../data/candidate/session';
 import { MATCH_TEXT, STATUS_TEXT, type Session } from '../../data/proctor/sessions';
@@ -15,6 +15,8 @@ const spokenTime = (sec: number) => `${Math.floor(sec / 60)} minutes ${Math.roun
  */
 export default function SessionPage({ s }: { s: Session }) {
   const h = usePageTitle(`${s.candidate} · Proctoring review`);
+  // Opened from another app (say, a job in the Internal ATS): offer the way back.
+  const from = (useLocation().state as { from?: { to: string; label: string } } | null)?.from;
   const total = s.minutes * 60;
   const [at, setAt] = useState(0);
   const [picked, setPicked] = useState<number | null>(null);
@@ -28,6 +30,7 @@ export default function SessionPage({ s }: { s: Session }) {
 
   return (
     <div className="ca-page pr-session">
+      {from && <p className="pr-from"><Link to={from.to}>← Back to {from.label}</Link></p>}
       <nav className="breadcrumbs" aria-label="Breadcrumb">
         <ol>
           <li><Link to={`${BASE}/high-risk`}>Proctoring review</Link></li>
