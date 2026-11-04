@@ -92,6 +92,8 @@ function Funnel({ j }: { j: Job }) {
 /** Job detail: placeholder layout for now. */
 function JobDetail({ j }: { j: Job }) {
   const h = usePageTitle(`${j.title} · Internal ATS`);
+  const [filter, setFilter] = useState<Filter>('Assessment');
+  const total = STAGES.reduce((n, s) => n + j.pipeline[s], 0);
   return (
     <div className="ca-page">
       <nav className="breadcrumbs" aria-label="Breadcrumb">
@@ -109,14 +111,20 @@ function JobDetail({ j }: { j: Job }) {
         <JobStatus s={j.status} />
       </header>
 
-      <ol className="job-pipe" aria-label="Pipeline">
-        {STAGES.map((s) => (
-          <li key={s}><span className="job-pipe__n">{j.pipeline[s]}</span><span className="job-pipe__label">{s}</span></li>
+      {/* The pipeline counts double as the filter for the candidates below. */}
+      <ul className="job-pipe" role="group" aria-label="Pipeline. Choose a stage to list its candidates">
+        {(['All', ...STAGES] as Filter[]).map((f) => (
+          <li key={f}>
+            <button type="button" className="job-pipe__btn" aria-pressed={filter === f} aria-controls="job-cands-list" onClick={() => setFilter(f)}>
+              <span className="job-pipe__n">{f === 'All' ? total : j.pipeline[f]}</span>
+              <span className="job-pipe__label">{f}</span>
+            </button>
+          </li>
         ))}
-      </ol>
+      </ul>
 
       <div className="job-grid">
-        <Candidates j={j} />
+        <Candidates key={filter} j={j} filter={filter} />
         <aside className="job-side" aria-label="About this job">
           <dl className="kv kv--stack">
             <div><dt>Recruiter</dt><dd>{j.recruiter}</dd></div>
@@ -140,37 +148,26 @@ const PAGE = 25;
 const sessionFor = (c: JobCandidate) => sessionById(c.oa.sessionId);
 
 /** Every candidate on the job, filterable by stage, with their OA status and a way into proctoring. */
-function Candidates({ j }: { j: Job }) {
+function Candidates({ j, filter }: { j: Job; filter: Filter }) {
   const all = candidatesFor(j.reqId);
-  const [filter, setFilter] = useState<Filter>('Assessment');
   const [page, setPage] = useState(0);
   const rows = (filter === 'All' ? [...all].sort((a, b) => ORDER.indexOf(a.stage) - ORDER.indexOf(b.stage)) : all.filter((c) => c.stage === filter));
   const shown = rows.slice(page * PAGE, page * PAGE + PAGE);
   const taken = rows.filter((c) => c.oa.state === 'completed');
   const pending = rows.filter((c) => c.oa.state === 'invited' || c.oa.state === 'started');
-  const pick = (f: Filter) => { setFilter(f); setPage(0); };
   return (
-    <section className="job-cands" aria-labelledby="job-cands">
+    <section className="job-cands" id="job-cands-list" aria-labelledby="job-cands">
       <div className="section-head">
-        <h2 id="job-cands" className="section-title">Candidates <span className="muted">{all.length}</span></h2>
-      </div>
-      <div className="job-filter" role="group" aria-label="Show candidates by stage">
-        {(['All', ...STAGES] as Filter[]).map((f) => {
-          const n = f === 'All' ? all.length : all.filter((c) => c.stage === f).length;
-          return (
-            <button key={f} type="button" className="job-filter__btn" aria-pressed={filter === f} onClick={() => pick(f)}>
-              {f} <span className="job-filter__n">{n}</span>
-            </button>
-          );
-        })}
+        <h2 id="job-cands" className="section-title">{filter === 'All' ? 'All candidates' : filter} <span className="muted">{rows.length}</span></h2>
       </div>
       {rows.length === 0 ? (
         <div className="empty"><p className="empty__title">No one at this stage</p><p>Candidates appear here as they move through the pipeline.</p></div>
       ) : (
         <>
           <p className="job-cands__sum" aria-live="polite">
-            {rows.length} {filter === 'All' ? 'candidates' : `in ${filter}`}
-            {j.workflow && <> · OA taken by {taken.length} · pending for {pending.length}{rows.length - taken.length - pending.length > 0 ? ` · not sent to ${rows.length - taken.length - pending.length}` : ''}</>}
+            {j.workflow
+              ? <>OA taken by {taken.length} · pending for {pending.length}{rows.length - taken.length - pending.length > 0 ? ` · not sent to ${rows.length - taken.length - pending.length}` : ''}</>
+              : 'This job has no online assessment.'}
           </p>
           <div className="table-wrap">
             <table className="table job-ctable">
