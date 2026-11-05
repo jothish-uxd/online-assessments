@@ -107,6 +107,44 @@ Rules:
 - **Keyboard.** Enter, Space or the arrow keys open it. Up/Down, Home/End and Page Up/Down move. Typing jumps to a matching option. Enter or Space chooses, Escape closes without changing, Tab chooses and moves on.
 - **High contrast.** In forced-colors mode the active option gets a system Highlight outline.
 
+### StatFilter
+
+`src/components/StatFilter.tsx`, styles in `src/styles/stat-filter.css` (imported by the component).
+
+A row of counts that also filters what's below it. Use it when a page would otherwise show KPI cards and a separate set of filter chips with the same numbers. First used for a job's pipeline in the Internal ATS: All, Applied, Screening, Assessment, Interview, Offer, Hired.
+
+```tsx
+import StatFilter from './components/StatFilter';
+
+<StatFilter
+  label="Pipeline. Choose a stage to list its candidates"
+  controls="job-cands-list"
+  value={stage}
+  onChange={setStage}
+  items={[
+    { value: 'All', label: 'All', count: 132 },
+    { value: 'Assessment', label: 'Assessment', count: 18 },
+  ]}
+/>
+```
+
+| Prop | What it does |
+| --- | --- |
+| `label` | Accessible name of the group; say that choosing a card filters |
+| `items` | `{ value, label, count }` list, in display order |
+| `value`, `onChange` | The chosen card (controlled) |
+| `controls` | id of the region the cards filter |
+| `className` | Extra classes, usually for spacing |
+
+Rules:
+
+- **Counts first, filter second.** Each card is a big tabular number over a short label. If the numbers don't filter anything, use a plain `<dl>` of KPI tiles instead.
+- **The chosen card uses the tab marker:** a 3px ink underline, the `--bg-subtle` fill and a semibold label. Never an inverted block; it competes with the content it filters. Hover is the `--bg-hover` wash.
+- **One strip, hairline dividers.** One 1px `--rule` border and 12px radius around the strip, with hairlines between cards. Cards wrap on narrow screens (minimum 112px each) and the dividers follow.
+- **Toggle buttons in a group.** Each card is a `<button aria-pressed>` with `aria-controls` pointing at what it filters; exactly one is pressed. Screen readers hear "18 Assessment, toggle button, pressed".
+- **Offer "All" first** when seeing everything is a useful state. Update the filtered region's heading to match ("Assessment 18"), and reset any paging when the choice changes.
+- **High contrast.** In forced-colors mode the underline becomes a system Highlight border.
+
 ## App shell
 
 Each app tab is a `BrowserFrame` under its own host (`content.onlineassessments.app`, `assess.…`, `hire.…`, `proctor.…`), so every tab reads as a separate product. Inside the frame: `.app-body` (240px `.sidebar` + `.app-main`, which scrolls). An app that isn't built yet uses `ComingSoonApp`: a ghost of the sidebar and toolbar behind a centered "Coming soon" note. Replace it with the real app when it's ready; the frame and host stay.

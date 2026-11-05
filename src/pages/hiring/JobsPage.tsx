@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, Navigate, Route, Routes, useParams } from 'react-router-dom';
 import { usePageTitle } from '../../components/usePageTitle';
+import StatFilter from '../../components/StatFilter';
 import { JOBS, STAGES, inPipeline, jobById, type Job } from '../../data/hiring/jobs';
 import { candidatesFor, type JobCandidate } from '../../data/hiring/applicants';
 import { STATUS_TEXT, sessionById } from '../../data/proctor/sessions';
@@ -112,16 +113,9 @@ function JobDetail({ j }: { j: Job }) {
       </header>
 
       {/* The pipeline counts double as the filter for the candidates below. */}
-      <ul className="job-pipe" role="group" aria-label="Pipeline. Choose a stage to list its candidates">
-        {(['All', ...STAGES] as Filter[]).map((f) => (
-          <li key={f}>
-            <button type="button" className="job-pipe__btn" aria-pressed={filter === f} aria-controls="job-cands-list" onClick={() => setFilter(f)}>
-              <span className="job-pipe__n">{f === 'All' ? total : j.pipeline[f]}</span>
-              <span className="job-pipe__label">{f}</span>
-            </button>
-          </li>
-        ))}
-      </ul>
+      <StatFilter className="job-pipe" label="Pipeline. Choose a stage to list its candidates" controls="job-cands-list"
+        value={filter} onChange={setFilter}
+        items={(['All', ...STAGES] as Filter[]).map((f) => ({ value: f, label: f, count: f === 'All' ? total : j.pipeline[f] }))} />
 
       <div className="job-grid">
         <Candidates key={filter} j={j} filter={filter} />

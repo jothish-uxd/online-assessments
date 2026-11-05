@@ -98,18 +98,6 @@
 .job-table .num { min-width: 64px; }
 .job-funnel { display: inline-flex; align-items: flex-end; gap: 3px; height: 30px; }
 .job-funnel span { width: 7px; background: var(--ink); border-radius: 1px; opacity: .85; }
-.job-pipe { list-style: none; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); margin: 8px 0 28px; padding: 0; border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; }
-.job-pipe li { display: flex; }
-.job-pipe li + li { border-left: 1px solid var(--rule); }
-.job-pipe__btn { flex: 1; display: grid; gap: 2px; padding: 14px 16px; border: 0; background: var(--bg); color: var(--ink); font: inherit; text-align: left; cursor: pointer; position: relative; }
-.job-pipe__btn:hover { background: var(--bg-hover); }
-.job-pipe__btn:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
-/* Selected stage borrows the tab pattern: an ink underline and a quiet fill, not an inverted block. */
-.job-pipe__btn[aria-pressed="true"] { background: var(--bg-subtle); box-shadow: inset 0 -3px 0 var(--ink); }
-.job-pipe__btn[aria-pressed="true"] .job-pipe__label { color: var(--ink); font-weight: 600; }
-.job-pipe__n { font-size: 24px; font-weight: 650; font-variant-numeric: tabular-nums; }
-.job-pipe__label { font-size: 12.5px; color: var(--ink-soft); }
-@media (max-width: 860px) { .job-pipe { grid-template-columns: repeat(4, minmax(0, 1fr)); } .job-pipe li:nth-child(5) { border-left: 0; } .job-pipe li:nth-child(n+5) { border-top: 1px solid var(--rule); } }
 .job-grid { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 24px; align-items: start; }
 @media (max-width: 1000px) { .job-grid { grid-template-columns: 1fr; } }
 .job-side { display: grid; gap: 16px; }
@@ -130,3 +118,5 @@
 .oa-state { display: inline-block; margin-right: 8px; padding: 0 6px; border: 1px solid var(--ink); border-radius: 4px; font-size: 11px; font-weight: 600; letter-spacing: .03em; text-transform: uppercase; vertical-align: 1px; }
 .oa-state.is-pending { border-style: dashed; font-weight: 500; }
 .job-pager { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-top: 12px; font-size: 13px; color: var(--ink-soft); }
+
+.job-pipe { margin: 8px 0 28px; }
