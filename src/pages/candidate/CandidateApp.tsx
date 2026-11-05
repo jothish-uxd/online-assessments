@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import BrowserFrame from '../../components/BrowserFrame';
-import ResetButton from '../../components/ResetButton';
+import { BrowserFrame } from '@jothish-uxd/enterprise-library';
+import { ResetButton } from '@jothish-uxd/enterprise-library';
 import Dialog from '../../components/content/Dialog';
 import { usePageTitle } from '../../components/usePageTitle';
 import { appById } from '../../data/apps';

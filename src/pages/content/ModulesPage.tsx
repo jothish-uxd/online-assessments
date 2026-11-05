@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { usePageTitle } from '../../components/usePageTitle';
-import Select from '../../components/Select';
+import { Select } from '@jothish-uxd/enterprise-library';
 import Dialog from '../../components/content/Dialog';
 import { Byline } from '../../components/content/Byline';
 import { AlertIcon, PlusIcon, SearchIcon } from '../../components/content/icons';

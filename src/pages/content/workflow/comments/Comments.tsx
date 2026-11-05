@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Select from '../../../../components/Select';
+import { Select } from '@jothish-uxd/enterprise-library';
 import { Avatar } from '../../../../components/content/Byline';
 import { CheckIcon, CloseIcon } from '../../../../components/content/icons';
 import { person, useMe } from '../../../../data/content/people';

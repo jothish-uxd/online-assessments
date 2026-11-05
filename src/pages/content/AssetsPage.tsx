@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { usePageTitle } from '../../components/usePageTitle';
-import Select from '../../components/Select';
+import { Select } from '@jothish-uxd/enterprise-library';
 import Thumb from '../../components/content/Thumb';
 import Dialog from '../../components/content/Dialog';
 import { Byline } from '../../components/content/Byline';

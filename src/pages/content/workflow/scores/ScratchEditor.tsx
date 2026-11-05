@@ -1,5 +1,5 @@
 import { useId, useMemo, useState } from 'react';
-import Select from '../../../../components/Select';
+import { Select } from '@jothish-uxd/enterprise-library';
 import { AlertIcon, CheckIcon, CopyIcon, PlusIcon, TrashIcon } from '../../../../components/content/icons';
 import { Byline } from '../../../../components/content/Byline';
 import { now } from '../../../../data/content/store';

@@ -1,6 +1,6 @@
 import { useId, useMemo, useState } from 'react';
 import Dialog from '../../components/content/Dialog';
-import Select from '../../components/Select';
+import { Select } from '@jothish-uxd/enterprise-library';
 import Chart, { CHART_TYPES } from '../../components/content/Chart';
 import { createChart } from '../../data/content/store';
 import type { Asset, ChartSpec, ChartType } from '../../data/content/types';

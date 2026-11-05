@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import BrowserFrame, { useFrameHistory } from '../components/BrowserFrame';
+import { BrowserFrame, useFrameHistory } from '@jothish-uxd/enterprise-library';
 import { usePageTitle } from '../components/usePageTitle';
 import { appById, type AppId } from '../data/apps';
 

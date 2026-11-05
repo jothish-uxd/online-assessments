@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
-import Select from '../../components/Select';
+import { Select } from '@jothish-uxd/enterprise-library';
 import { ASSESSMENT, QUESTIONS } from '../../data/candidate/assessment';
 import { SESSION_ID, answered, logEvent, patch, saveCapture, startExam, useCaptures, useSession, type IdType } from '../../data/candidate/session';
 import { CameraView, captureFrame, useCamera } from './Camera';

@@ -1,6 +1,6 @@
 import { useId, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import Select from '../../../components/Select';
+import { Select } from '@jothish-uxd/enterprise-library';
 import { AlertIcon } from '../../../components/content/icons';
 import { useModules } from '../../../data/content/store';
 import {

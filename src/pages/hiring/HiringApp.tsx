@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Navigate, NavLink, Route, Routes } from 'react-router-dom';
-import BrowserFrame, { useFrameHistory } from '../../components/BrowserFrame';
+import { BrowserFrame, useFrameHistory } from '@jothish-uxd/enterprise-library';
 import AppBarEnd from '../../components/AppBarEnd';
 import { usePageTitle } from '../../components/usePageTitle';
 import { appById } from '../../data/apps';

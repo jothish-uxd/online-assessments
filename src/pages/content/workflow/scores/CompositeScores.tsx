@@ -1,5 +1,5 @@
 import { useEffect, useId, useState } from 'react';
-import Select from '../../../../components/Select';
+import { Select } from '@jothish-uxd/enterprise-library';
 import Dialog from '../../../../components/content/Dialog';
 import Menu from '../../../../components/content/Menu';
 import { DownIcon, UpIcon } from '../../../../components/content/icons';

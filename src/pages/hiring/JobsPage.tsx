@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, Navigate, Route, Routes, useParams } from 'react-router-dom';
 import { usePageTitle } from '../../components/usePageTitle';
-import StatFilter from '../../components/StatFilter';
+import { StatFilter } from '@jothish-uxd/enterprise-library';
 import { JOBS, STAGES, inPipeline, jobById, type Job } from '../../data/hiring/jobs';
 import { candidatesFor, type JobCandidate } from '../../data/hiring/applicants';
 import { STATUS_TEXT, sessionById } from '../../data/proctor/sessions';

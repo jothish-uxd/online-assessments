@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Navigate, NavLink, Route, Routes } from 'react-router-dom';
-import BrowserFrame, { useFrameHistory } from '../../components/BrowserFrame';
-import ResetButton from '../../components/ResetButton';
+import { BrowserFrame, useFrameHistory } from '@jothish-uxd/enterprise-library';
+import { ResetButton } from '@jothish-uxd/enterprise-library';
 import { appById } from '../../data/apps';
 import { PEOPLE, person, setMe, useMe } from '../../data/content/people';
 import Menu from '../../components/content/Menu';

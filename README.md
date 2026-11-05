@@ -1,6 +1,6 @@
 # Online Assessments
 
-A prototype of an online assessment platform for hiring, built on the same design system as [Cipher Lab](https://github.com/jothish-uxd/cipher-lab): Geist, monochrome ink on white, and each app shown inside its own browser frame.
+A prototype of an online assessment platform for hiring, built on [Enterprise Library](https://jothish-uxd.github.io/enterprise-library/), the same design system as [Cipher Lab](https://github.com/jothish-uxd/cipher-lab): Geist, monochrome ink on white, and each app shown inside its own browser frame.
 
 ## Tabs
 
@@ -21,4 +21,4 @@ npm run dev
 
 `npm run build` writes `dist/`. Pushing to `main` deploys to GitHub Pages (Settings → Pages → Source: GitHub Actions).
 
-See [DESIGN-SYSTEM.md](DESIGN-SYSTEM.md) for tokens and components.
+Tokens, shared styles and components come from `@jothish-uxd/enterprise-library`; see [DESIGN-SYSTEM.md](DESIGN-SYSTEM.md).

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import Select from '../../../../components/Select';
+import { Select } from '@jothish-uxd/enterprise-library';
 import Dialog from '../../../../components/content/Dialog';
 import { AlertIcon } from '../../../../components/content/icons';
 import { now } from '../../../../data/content/store';

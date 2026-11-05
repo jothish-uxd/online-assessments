@@ -1,5 +1,5 @@
 import { useId, useState } from 'react';
-import Select from '../../../../components/Select';
+import { Select } from '@jothish-uxd/enterprise-library';
 import Dialog from '../../../../components/content/Dialog';
 import { AlertIcon, CloseIcon, PlusIcon } from '../../../../components/content/icons';
 import { VARIATION_CATEGORIES, categoryLabel } from '../../../../data/content/seedScoring';

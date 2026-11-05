@@ -1,6 +1,6 @@
 import { useId, useState } from 'react';
 import { Link } from 'react-router-dom';
-import Select from '../../components/Select';
+import { Select } from '@jothish-uxd/enterprise-library';
 import Thumb from '../../components/content/Thumb';
 import { Byline } from '../../components/content/Byline';
 import { AlertIcon, CloseIcon, PlusIcon } from '../../components/content/icons';

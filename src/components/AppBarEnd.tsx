@@ -1,4 +1,4 @@
-import ResetButton from './ResetButton';
+import { ResetButton } from '@jothish-uxd/enterprise-library';
 import Menu from './content/Menu';
 import { PEOPLE, person, setMe, useMe } from '../data/content/people';
 
